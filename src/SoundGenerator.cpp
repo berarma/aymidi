@@ -18,7 +18,6 @@ namespace AyMidi {
         channels{ Channel(ayumi, 0), Channel(ayumi, 1), Channel(ayumi, 2) }
     {
         ayumi_configure(&*ayumi, emul, clockRate, sampleRate);
-        clockStep = clockRate / sampleRate;
         
         for (int index = 0; index < 3; index++) {
             ayumi_set_pan(&*ayumi, index, 0.5, 1);
@@ -30,7 +29,6 @@ namespace AyMidi {
     }
 
     int SoundGenerator::setClockRate(int clockRate) {
-        clockStep = clockRate / sampleRate;
         ayumi->step = clockRate / (sampleRate * 8 * DECIMATE_FACTOR); // XXX Ayumi internals
         this->clockRate = clockRate;
         return ayumi->step < 1;

@@ -18,7 +18,6 @@ namespace AyMidi {
             Emul emul = defaultEmul;
             bool removeDc = false;
             float gain;
-            float clockStep;
             Channel channels[3];
         public:
             const static Emul defaultEmul = YM2149;
