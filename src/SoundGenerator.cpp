@@ -1,8 +1,8 @@
 #include "DistrhoUtils.hpp"
 #include "SoundGenerator.hpp"
 
-extern double* YM_dac_table;
-extern double* AY_dac_table;
+extern "C" double YM_dac_table[];
+extern "C" double AY_dac_table[];
 
 namespace AyMidi {
 
