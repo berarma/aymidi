@@ -1,14 +1,14 @@
 #include <algorithm>
-#include "MidiChannel.hpp"
+#include "Channel.hpp"
 
 namespace AyMidi {
 
-    MidiChannel::MidiChannel(const int index) {
+    Channel::Channel(const int index) {
         this->index = index;
         cmdReset();
     }
 
-    std::shared_ptr<Voice> MidiChannel::cmdNoteOn(const int note, const int velocity) {
+    std::shared_ptr<Voice> Channel::cmdNoteOn(const int note, const int velocity) {
         if (velocity == 0) {
             return cmdNoteOff(note, velocity);
         }
@@ -17,7 +17,7 @@ namespace AyMidi {
         return voice;
     }
 
-    std::shared_ptr<Voice> MidiChannel::cmdNoteOff(const int note, const int velocity) {
+    std::shared_ptr<Voice> Channel::cmdNoteOff(const int note, const int velocity) {
         auto it = std::find_if(allocatedVoices.begin(), allocatedVoices.end(), [note](std::shared_ptr<Voice> voice) { return voice->note == note; });
         if (it == allocatedVoices.end()) {
             return nullptr;
@@ -28,18 +28,18 @@ namespace AyMidi {
         return voice;
     }
 
-    void MidiChannel::cmdKeyPressure(const int note, const int pressure) {
+    void Channel::cmdKeyPressure(const int note, const int pressure) {
         auto it = std::find_if(allocatedVoices.begin(), allocatedVoices.end(), [note](std::shared_ptr<Voice> voice) { return voice->note == note; });
         (*it)->pressure = pressure;
     }
 
-    void MidiChannel::cmdAllNotesOff() {
+    void Channel::cmdAllNotesOff() {
         for (auto& voice : allocatedVoices) {
             voice->remove = true;
         }
     }
 
-    void MidiChannel::cmdReset() {
+    void Channel::cmdReset() {
         cmdAllNotesOff();
         cmdResetCC();
         program = 0;
@@ -47,7 +47,7 @@ namespace AyMidi {
         pan = 0.5f;
     }
 
-    void MidiChannel::cmdResetCC() {
+    void Channel::cmdResetCC() {
         pitchBend = 0.0f;
         modWheel = 0.0f;
         pressure = 0.0f;

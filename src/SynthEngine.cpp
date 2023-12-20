@@ -8,7 +8,7 @@ namespace AyMidi {
 
     SynthEngine::SynthEngine(std::shared_ptr<SoundGenerator> sg) : sg(sg) {
         for (int i = 0; i < 16; i++) {
-            channels[i] = std::make_unique<MidiChannel>(i);
+            channels[i] = std::make_unique<Channel>(i);
         }
         for (int i = 0; i < 3; i++) {
             voices[i] = nullptr;
@@ -83,7 +83,7 @@ namespace AyMidi {
         const uint8_t status = message[0];
         const int index = status & 0xF;
 
-        MidiChannel* channel = &*channels[index];
+        Channel* channel = &*channels[index];
 
         switch (lv2_midi_message_type(message)) {
             case LV2_MIDI_MSG_NOTE_OFF:
@@ -226,7 +226,7 @@ namespace AyMidi {
         return (value + (value == 0) - (1 << (bits - 1))) / (float)((1 << (bits - 1)) - 1);
     }
 
-    int SynthEngine::getLevel(const std::shared_ptr<Voice> voice, const std::shared_ptr<MidiChannel> channel) const {
+    int SynthEngine::getLevel(const std::shared_ptr<Voice> voice, const std::shared_ptr<Channel> channel) const {
         return std::round(voice->velocity * channel->volume / 127.0 * 15.0);
     }
 
@@ -248,19 +248,19 @@ namespace AyMidi {
         return freqToBuzzerPeriod(freq);
     }
 
-    int SynthEngine::getTonePeriod(const std::shared_ptr<Voice> voice, const std::shared_ptr<MidiChannel> channel) const {
+    int SynthEngine::getTonePeriod(const std::shared_ptr<Voice> voice, const std::shared_ptr<Channel> channel) const {
         return getTonePeriod(voice->note + channel->pitchBend * 12.0);
     }
 
-    int SynthEngine::getTonePeriod(const int buzzerPeriod, const std::shared_ptr<MidiChannel> channel) const {
+    int SynthEngine::getTonePeriod(const int buzzerPeriod, const std::shared_ptr<Channel> channel) const {
         return buzzerPeriod * (1 << channel->multRatio) - channel->multDetune;
     }
 
-    int SynthEngine::getBuzzerPeriod(const std::shared_ptr<Voice> voice, const std::shared_ptr<MidiChannel> channel) const {
+    int SynthEngine::getBuzzerPeriod(const std::shared_ptr<Voice> voice, const std::shared_ptr<Channel> channel) const {
         return getBuzzerPeriod(voice->note + channel->pitchBend * 12.0);
     }
 
-    int SynthEngine::getBuzzerPeriod(const int tonePeriod, const std::shared_ptr<MidiChannel> channel) const {
+    int SynthEngine::getBuzzerPeriod(const int tonePeriod, const std::shared_ptr<Channel> channel) const {
         return std::round(tonePeriod / (float)(1 << channel->multRatio)) - channel->multDetune;
     }
 

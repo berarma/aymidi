@@ -3,7 +3,7 @@
 #include <cstdint>
 #include <vector>
 #include "SoundGenerator.hpp"
-#include "MidiChannel.hpp"
+#include "Channel.hpp"
 
 namespace AyMidi {
 
@@ -30,21 +30,21 @@ namespace AyMidi {
                 {  false, false, false, false, }, // Pgm 9
             };
             std::shared_ptr<SoundGenerator> sg;
-            std::shared_ptr<MidiChannel> channels[16];
+            std::shared_ptr<Channel> channels[16];
             std::shared_ptr<Voice> voices[3];
             std::vector<int> voicePool;
             unsigned updatePeriod;
             unsigned updateCounter;
 
-            int getLevel(const std::shared_ptr<Voice> voice, const std::shared_ptr<MidiChannel> channel) const;
+            int getLevel(const std::shared_ptr<Voice> voice, const std::shared_ptr<Channel> channel) const;
             int freqToTonePeriod(const double freq) const;
             int freqToBuzzerPeriod(const double freq) const;
             int getTonePeriod(const double note) const;
             int getBuzzerPeriod(const double note) const;
-            int getTonePeriod(const std::shared_ptr<Voice> voice, const std::shared_ptr<MidiChannel> channel) const;
-            int getTonePeriod(const int buzzerPeriod, const std::shared_ptr<MidiChannel> channel) const;
-            int getBuzzerPeriod(const std::shared_ptr<Voice> voice, const std::shared_ptr<MidiChannel> channel) const;
-            int getBuzzerPeriod(const int tonePeriod, const std::shared_ptr<MidiChannel> channel) const;
+            int getTonePeriod(const std::shared_ptr<Voice> voice, const std::shared_ptr<Channel> channel) const;
+            int getTonePeriod(const int buzzerPeriod, const std::shared_ptr<Channel> channel) const;
+            int getBuzzerPeriod(const std::shared_ptr<Voice> voice, const std::shared_ptr<Channel> channel) const;
+            int getBuzzerPeriod(const int tonePeriod, const std::shared_ptr<Channel> channel) const;
             float centerValue(int value, int bits) const;
             void synch();
 
