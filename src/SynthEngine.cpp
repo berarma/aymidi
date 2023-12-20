@@ -14,6 +14,13 @@ namespace AyMidi {
             voices[i] = nullptr;
             voicePool.push_back(i);
         }
+
+        setUpdateRate(50);
+    }
+
+    void SynthEngine::setUpdateRate(int rate) {
+        updatePeriod = std::round((float)sg->sampleRate / rate);
+        updateCounter = 0;
     }
 
     void SynthEngine::setNoisePeriod(const int index, const int period) {
@@ -133,7 +140,7 @@ namespace AyMidi {
         }
     }
 
-    void SynthEngine::process() {
+    void SynthEngine::synch() {
         for (int index = 0; index < 3; index++) {
             const auto& voice = voices[index];
             if (voice == nullptr) {
@@ -191,6 +198,27 @@ namespace AyMidi {
                 sg->setNoisePeriod(channel->noisePeriod);
             }
             sg->setPan(index, channel->pan);
+        }
+    }
+
+    void SynthEngine::process(float *left, float *right, const uint32_t size) {
+        int reminder = size;
+        while (reminder > 0) {
+            if (updateCounter >= updatePeriod) {
+                updateCounter -= updatePeriod;
+                synch();
+            }
+            int nextUpdate = updatePeriod - updateCounter;
+            if (nextUpdate >= reminder) {
+                updateCounter = updateCounter + reminder;
+                sg->process(left, right, reminder);
+                return;
+            }
+            sg->process(left, right, nextUpdate);
+            left += nextUpdate;
+            right += nextUpdate;
+            reminder -= nextUpdate;
+            updateCounter += nextUpdate;
         }
     }
 

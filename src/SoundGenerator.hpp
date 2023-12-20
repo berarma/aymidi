@@ -18,13 +18,14 @@ namespace AyMidi {
     class SoundGenerator {
         private:
             std::shared_ptr<struct ayumi> ayumi;
-            double sampleRate;
             int clockRate;
             Emul emul = defaultEmul;
             bool removeDc = false;
             float gain;
             AyChannel channels[3];
         public:
+            double sampleRate;
+
             const static Emul defaultEmul = YM2149;
             SoundGenerator(double sampleRate, int clockRate);
             int setClockRate(int clockRate);

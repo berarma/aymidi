@@ -33,7 +33,8 @@ namespace AyMidi {
             std::shared_ptr<MidiChannel> channels[16];
             std::shared_ptr<Voice> voices[3];
             std::vector<int> voicePool;
-            int envelopePeriod;
+            unsigned updatePeriod;
+            unsigned updateCounter;
 
             int getLevel(const std::shared_ptr<Voice> voice, const std::shared_ptr<MidiChannel> channel) const;
             int freqToTonePeriod(const double freq) const;
@@ -45,10 +46,11 @@ namespace AyMidi {
             int getBuzzerPeriod(const std::shared_ptr<Voice> voice, const std::shared_ptr<MidiChannel> channel) const;
             int getBuzzerPeriod(const int tonePeriod, const std::shared_ptr<MidiChannel> channel) const;
             float centerValue(int value, int bits) const;
+            void synch();
 
         public:
             SynthEngine(std::shared_ptr<SoundGenerator> sg);
-            void process();
+            void process(float *left, float *right, const uint32_t size);
             void midiSend(const uint8_t* message);
             void setNoisePeriod(const int index, const int period);
             void setMultRatio(const int index, const int ratio);
@@ -64,6 +66,7 @@ namespace AyMidi {
             void setRingmodDetune(const int index, const float detune);
             void setRingmodDuty(const int index, const float duty);
             void setSyncBuzzerPeriod(const int index, const float period);
+            void setUpdateRate(int rate);
     };
 
 }

@@ -17,6 +17,7 @@ class AyMidiPlugin : public Plugin {
         GAIN,
         CLOCKRATE,
         EMUL,
+        UPDATERATE,
         NOISEPERIOD,
         MULTRATIO,
         MULTDETUNE,
@@ -134,10 +135,18 @@ class AyMidiPlugin : public Plugin {
                         parameter.enumValues.values = enumValues;
                     }
                     break;
+                case UPDATERATE:
+                    parameter.hints     |= kParameterIsInteger;
+                    parameter.name       = "Update Rate";
+                    parameter.symbol     = "UPDRATE";
+                    parameter.ranges.min = 10;
+                    parameter.ranges.max = 300;
+                    parameter.ranges.def = 50;
+                    break;
                 case NOISEPERIOD:
                     parameter.hints     |= kParameterIsInteger;
                     parameter.name       = "Noise Period";
-                    parameter.symbol     = "Noise";
+                    parameter.symbol     = "NOISE";
                     parameter.ranges.min = 0;
                     parameter.ranges.max = 31;
                     parameter.ranges.def = 0;
@@ -272,6 +281,8 @@ class AyMidiPlugin : public Plugin {
                     return pClockRate;
                 case EMUL:
                     return pEmul;
+                case UPDATERATE:
+                    return pUpdateRate;
                 case NOISEPERIOD:
                     return pNoisePeriod;
                 case MULTRATIO:
@@ -322,6 +333,10 @@ class AyMidiPlugin : public Plugin {
                 case EMUL:
                     pEmul = value;
                     soundGenerator->setEmul(pEmul == 1.0f ? AyMidi::YM2149 : AyMidi::AY8910);
+                    break;
+                case UPDATERATE:
+                    pUpdateRate = value;
+                    synthEngine->setUpdateRate((int)pUpdateRate);
                     break;
                 case NOISEPERIOD:
                     pNoisePeriod = value;
@@ -401,16 +416,14 @@ class AyMidiPlugin : public Plugin {
                 const MidiEvent& me = midiEvents[i];
                 if (me.frame > currentFrame) {
                     const uint32_t size = me.frame - currentFrame;
-                    synthEngine->process();
-                    soundGenerator->process(outL, outR, size);
+                    synthEngine->process(outL, outR, size);
                     currentFrame = me.frame;
                     outL += size;
                     outR += size;
                 }
                 synthEngine->midiSend(me.data);
             }
-            synthEngine->process();
-            soundGenerator->process(outL, outR, frames - currentFrame);
+            synthEngine->process(outL, outR, frames - currentFrame);
         }
 
     private:
@@ -421,6 +434,7 @@ class AyMidiPlugin : public Plugin {
         float pGain;
         float pClockRate;
         float pEmul;
+        float pUpdateRate;
         float pNoisePeriod;
         float pMultRatio;
         float pMultDetune;
