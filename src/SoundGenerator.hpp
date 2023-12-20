@@ -1,13 +1,18 @@
 #pragma once
 
 #include <memory>
-#include "Channel.hpp"
 
 namespace AyMidi {
 
     enum Emul {
         AY8910,
         YM2149
+    };
+
+    struct AyChannel {
+        bool tone_off = true;
+        bool noise_off = true;
+        bool envelope_on = false;
     };
 
     class SoundGenerator {
@@ -18,11 +23,10 @@ namespace AyMidi {
             Emul emul = defaultEmul;
             bool removeDc = false;
             float gain;
-            Channel channels[3];
+            AyChannel channels[3];
         public:
             const static Emul defaultEmul = YM2149;
             SoundGenerator(double sampleRate, int clockRate);
-            Channel& getChannel(int index);
             int setClockRate(int clockRate);
             void setEmul(Emul emul);
             void enableRemoveDc(bool enable = true);
@@ -30,6 +34,12 @@ namespace AyMidi {
             void setNoisePeriod(int period);
             void setEnvelopePeriod(int period);
             void setEnvelopeShape(int shape);
+            void enableTone(int index, bool enable = true);
+            void enableNoise(int index, bool enable = true);
+            void enableEnvelope(int index, bool enable = true);
+            void setLevel(int index, int level);
+            void setTonePeriod(int index, int period);
+            void setPan(int index, float pan);
             void process(float *left, float *right, const uint32_t size);
             int getClockRate() const;
     };

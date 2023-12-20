@@ -139,10 +139,9 @@ namespace AyMidi {
             if (voice == nullptr) {
                 continue;
             }
-            auto& ayChannel = sg->getChannel(index);
             if (voice->remove) {
-                ayChannel.setLevel(0);
-                ayChannel.enableEnvelope(false);
+                sg->setLevel(index, 0);
+                sg->enableEnvelope(index, false);
                 auto poolIndex = std::find(voicePool.begin(), voicePool.end(), index);
                 std::rotate(poolIndex, poolIndex + 1, voicePool.end());
                 voices[index] = nullptr;
@@ -154,14 +153,14 @@ namespace AyMidi {
             pgm = pgm % 10;
             if (voice->isNew) {
                 voice->isNew = false;
-                ayChannel.enableEnvelope(programs[pgm].buzzer);
-                ayChannel.enableTone(programs[pgm].square);
+                sg->enableEnvelope(index, programs[pgm].buzzer);
+                sg->enableTone(index, programs[pgm].square);
                 if (programs[pgm].buzzer) {
                     sg->setEnvelopeShape(waveform * 2 + 8);
                 } else {
-                    ayChannel.setLevel(getLevel(voice, channel));
+                    sg->setLevel(index, getLevel(voice, channel));
                 }
-                ayChannel.enableNoise(channel->noisePeriod > 0);
+                sg->enableNoise(index, channel->noisePeriod > 0);
                 d_debug("AY Channel: %d", index);
                 d_debug("note: %d", voice->note);
                 d_debug("velocity: %d", voice->velocity);
@@ -185,13 +184,13 @@ namespace AyMidi {
             }
             if (programs[pgm].square) {
                 d_debug("tone on: %d", tonePeriod);
-                ayChannel.setTonePeriod(tonePeriod);
+                sg->setTonePeriod(index, tonePeriod);
             }
-            ayChannel.enableNoise(channel->noisePeriod > 0);
+            sg->enableNoise(index, channel->noisePeriod > 0);
             if (channel->noisePeriod > 0) {
                 sg->setNoisePeriod(channel->noisePeriod);
             }
-            ayChannel.setPan(channel->pan);
+            sg->setPan(index, channel->pan);
         }
     }
 

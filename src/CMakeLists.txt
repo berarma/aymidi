@@ -6,7 +6,6 @@ dpf_add_plugin(aymidi
                 SynthEngine.cpp
                 MidiChannel.cpp
                 SoundGenerator.cpp
-                Channel.cpp
                 ayumi.c
 )
 

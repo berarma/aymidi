@@ -1,31 +1,25 @@
-#include "SoundGenerator.hpp"
 #include "DistrhoUtils.hpp"
-
-extern "C"
-{
-#include "ayumi.h"
-}
+#include "SoundGenerator.hpp"
 
 extern double* YM_dac_table;
 extern double* AY_dac_table;
 
 namespace AyMidi {
 
+extern "C" {
+#include "ayumi.h"
+}
+
     SoundGenerator::SoundGenerator(double sampleRate, int clockRate) :
         sampleRate(sampleRate),
         clockRate(clockRate),
-        ayumi(std::make_shared<struct ayumi>()),
-        channels{ Channel(ayumi, 0), Channel(ayumi, 1), Channel(ayumi, 2) }
+        ayumi(std::make_shared<struct ayumi>())
     {
         ayumi_configure(&*ayumi, emul, clockRate, sampleRate);
         
         for (int index = 0; index < 3; index++) {
             ayumi_set_pan(&*ayumi, index, 0.5, 1);
         }
-    }
-
-    Channel& SoundGenerator::getChannel(int index) {
-        return channels[index];
     }
 
     int SoundGenerator::setClockRate(int clockRate) {
@@ -65,6 +59,36 @@ namespace AyMidi {
 
     void SoundGenerator::setGain(float gain) {
         this->gain = gain;
+    }
+
+    void SoundGenerator::enableTone(int index, bool enable) {
+        auto& channel = channels[index];
+        channel.tone_off = !enable;
+        ayumi_set_mixer(&*ayumi, index, channel.tone_off, channel.noise_off, channel.envelope_on);
+    }
+
+    void SoundGenerator::enableNoise(int index, bool enable) {
+        auto& channel = channels[index];
+        channel.noise_off = !enable;
+        ayumi_set_mixer(&*ayumi, index, channel.tone_off, channel.noise_off, channel.envelope_on);
+    }
+
+    void SoundGenerator::enableEnvelope(int index, bool enable) {
+        auto& channel = channels[index];
+        channel.envelope_on = enable;
+        ayumi_set_mixer(&*ayumi, index, channel.tone_off, channel.noise_off, channel.envelope_on);
+    }
+
+    void SoundGenerator::setLevel(int index, int level) {
+        ayumi_set_volume(&*ayumi, index, level);
+    }
+
+    void SoundGenerator::setTonePeriod(int index, int period) {
+        ayumi_set_tone(&*ayumi, index, period);
+    }
+
+    void SoundGenerator::setPan(int index, float pan) {
+        ayumi_set_pan(&*ayumi, index, pan, 1);
     }
 
     void SoundGenerator::process(float* left, float* right, const uint32_t size) {
