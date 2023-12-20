@@ -203,6 +203,9 @@ namespace AyMidi {
                 sg->setNoisePeriod(channel->noisePeriod);
             }
             sg->setPan(index, channel->pan);
+            if (voice->envelopeCounter < (channel->attack + channel->hold + channel->decay)) {
+                voice->envelopeCounter++;
+            }
         }
     }
 
@@ -254,7 +257,11 @@ namespace AyMidi {
     }
 
     int SynthEngine::getTonePeriod(const std::shared_ptr<Voice> voice, const std::shared_ptr<Channel> channel) const {
-        return getTonePeriod(voice->note + channel->pitchBend * 12.0);
+        int note = voice->note;
+        if (channel->attackPitch && voice->envelopeCounter < (channel->attack + channel->hold)) {
+            note += channel->attackPitch;
+        }
+        return getTonePeriod(note + channel->pitchBend * 12.0);
     }
 
     int SynthEngine::getTonePeriod(const int buzzerPeriod, const std::shared_ptr<Channel> channel) const {
@@ -286,19 +293,16 @@ namespace AyMidi {
         auto counter = voice->envelopeCounter;
         if (counter < channel->attack) {
             voice->envelopeLevel = (counter + 1.0f) / channel->attack;
-            voice->envelopeCounter++;
             return;
         }
         counter -= channel->attack;
         if (counter < channel->hold) {
             voice->envelopeLevel = 1.0f;
-            voice->envelopeCounter++;
             return;
         }
         counter -= channel->hold;
         if (counter < channel->decay) {
             voice->envelopeLevel = 1.0f + (channel->sustain - 1.0f) * ((float)counter / channel->decay);
-            voice->envelopeCounter++;
             return;
         }
         if (channel->sustain == 0.0f) {
