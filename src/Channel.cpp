@@ -24,7 +24,11 @@ namespace AyMidi {
         }
         std::shared_ptr<Voice> voice = *it;
         allocatedVoices.erase(it);
-        voice->remove = true;
+        if (release) {
+            voice->release = true;
+        } else {
+            voice->remove = true;
+        }
         return voice;
     }
 
@@ -45,6 +49,20 @@ namespace AyMidi {
         program = 0;
         volume = 100.0f / 127.0f;
         pan = 0.5f;
+        noisePeriod = 0;
+        multRatio = 0;
+        multDetune = 0;
+        arpeggioSpeed = 0;
+        attackPitch = 0;
+        attack = 0;
+        hold = 0;
+        decay = 0;
+        sustain = 1.0f;
+        release = 0;
+        ringmodDepth = 0.0f;
+        ringmodDetune = 0.0f;
+        ringmodDuty = 0.0f;
+        syncBuzzerPeriod = 0.0f;
     }
 
     void Channel::cmdResetCC() {

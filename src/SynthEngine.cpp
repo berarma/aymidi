@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <cmath>
+#include <limits>
 #include <lv2/midi/midi.h>
 #include "DistrhoUtils.hpp"
 #include "SynthEngine.hpp"
@@ -146,14 +147,6 @@ namespace AyMidi {
             if (voice == nullptr) {
                 continue;
             }
-            if (voice->remove) {
-                sg->setLevel(index, 0);
-                sg->enableEnvelope(index, false);
-                auto poolIndex = std::find(voicePool.begin(), voicePool.end(), index);
-                std::rotate(poolIndex, poolIndex + 1, voicePool.end());
-                voices[index] = nullptr;
-                continue;
-            }
             const auto& channel = channels[voice->channelId];
             auto pgm = channel->program;
             int waveform = pgm / 10;
@@ -171,6 +164,18 @@ namespace AyMidi {
                 d_debug("AY Channel: %d", index);
                 d_debug("note: %d", voice->note);
                 d_debug("velocity: %d", voice->velocity);
+            }
+            if (!programs[pgm].buzzer) {
+                updateEnvelope(voice, channel);
+                sg->setLevel(index, getLevel(voice, channel));
+            }
+            if (voice->remove) {
+                sg->setLevel(index, 0);
+                sg->enableEnvelope(index, false);
+                auto poolIndex = std::find(voicePool.begin(), voicePool.end(), index);
+                std::rotate(poolIndex, poolIndex + 1, voicePool.end());
+                voices[index] = nullptr;
+                continue;
             }
             int tonePeriod;
             int buzzerPeriod;
@@ -227,7 +232,7 @@ namespace AyMidi {
     }
 
     int SynthEngine::getLevel(const std::shared_ptr<Voice> voice, const std::shared_ptr<Channel> channel) const {
-        return std::round(voice->velocity * channel->volume / 127.0 * 15.0);
+        return std::round(voice->envelopeLevel * voice->velocity * channel->volume / 127.0 * 15.0);
     }
 
     int SynthEngine::freqToTonePeriod(const double freq) const {
@@ -262,6 +267,46 @@ namespace AyMidi {
 
     int SynthEngine::getBuzzerPeriod(const int tonePeriod, const std::shared_ptr<Channel> channel) const {
         return std::round(tonePeriod / (float)(1 << channel->multRatio)) - channel->multDetune;
+    }
+
+    void SynthEngine::updateEnvelope(std::shared_ptr<Voice> voice, const std::shared_ptr<Channel> channel) {
+        if (voice->release && channel->release) {
+            if (voice->releaseCounter == 0) {
+                voice->releaseStartLevel = voice->envelopeLevel;
+            }
+            if (voice->releaseCounter >= channel->release) {
+                voice->remove = true;
+            } else {
+                voice->envelopeLevel = voice->releaseStartLevel * (1.0f - (float)voice->releaseCounter / channel->release);
+                voice->releaseCounter++;
+            }
+            return;
+        }
+
+        auto counter = voice->envelopeCounter;
+        if (counter < channel->attack) {
+            voice->envelopeLevel = (counter + 1.0f) / channel->attack;
+            voice->envelopeCounter++;
+            return;
+        }
+        counter -= channel->attack;
+        if (counter < channel->hold) {
+            voice->envelopeLevel = 1.0f;
+            voice->envelopeCounter++;
+            return;
+        }
+        counter -= channel->hold;
+        if (counter < channel->decay) {
+            voice->envelopeLevel = 1.0f + (channel->sustain - 1.0f) * ((float)counter / channel->decay);
+            voice->envelopeCounter++;
+            return;
+        }
+        if (channel->sustain == 0.0f) {
+            voice->remove = true;
+            return;
+        }
+        voice->envelopeCounter = std::numeric_limits<unsigned>::max();
+        voice->envelopeLevel = channel->sustain;
     }
 
 }

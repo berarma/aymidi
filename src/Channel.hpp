@@ -9,16 +9,26 @@ namespace AyMidi {
         public:
             bool isNew;
             bool remove;
+            bool release;
             int channelId;
             int note;
             int velocity;
             int pressure;
+            float envelopeLevel;
+            float releaseStartLevel;
+            unsigned envelopeCounter;
+            unsigned releaseCounter;
             Voice(int channelId, int note, int velocity) :
                 isNew(true),
                 remove(false),
+                release(false),
                 channelId(channelId),
                 note(note),
-                velocity(velocity)
+                velocity(velocity),
+                envelopeCounter(0),
+                releaseCounter(0),
+                envelopeLevel(0.0f),
+                releaseStartLevel(0.0f)
             { }
     };
 

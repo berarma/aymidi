@@ -45,6 +45,7 @@ namespace AyMidi {
             int getTonePeriod(const int buzzerPeriod, const std::shared_ptr<Channel> channel) const;
             int getBuzzerPeriod(const std::shared_ptr<Voice> voice, const std::shared_ptr<Channel> channel) const;
             int getBuzzerPeriod(const int tonePeriod, const std::shared_ptr<Channel> channel) const;
+            void updateEnvelope(std::shared_ptr<Voice> voice, std::shared_ptr<Channel> channel);
             float centerValue(int value, int bits) const;
             void synch();
 
