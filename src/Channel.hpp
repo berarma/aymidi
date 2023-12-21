@@ -56,6 +56,7 @@ namespace AyMidi {
             float ringmodDepth;
             float ringmodDetune;
             float ringmodDuty;
+            float syncSquarePeriod;
             float syncBuzzerPeriod;
 
             Channel(const int index);

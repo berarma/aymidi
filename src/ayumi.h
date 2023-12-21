@@ -55,6 +55,7 @@ struct ayumi {
   int dc_index;
   double left;
   double right;
+  int decimate_factor;
 };
 
 int ayumi_configure(struct ayumi* ay, int is_ym, double clock_rate, int sr);
@@ -65,7 +66,7 @@ void ayumi_set_mixer(struct ayumi* ay, int index, int t_off, int n_off, int e_on
 void ayumi_set_volume(struct ayumi* ay, int index, int volume);
 void ayumi_set_envelope(struct ayumi* ay, int period);
 void ayumi_set_envelope_shape(struct ayumi* ay, int shape);
-void ayumi_process(struct ayumi* ay);
+int ayumi_process(struct ayumi* ay, int single_cycle);
 void ayumi_remove_dc(struct ayumi* ay);
 
 #endif

@@ -10,20 +10,28 @@ namespace AyMidi {
     };
 
     struct AyChannel {
-        bool tone_off = true;
-        bool noise_off = true;
-        bool envelope_on = false;
+        bool toneOff = true;
+        bool noiseOff = true;
+        bool envelopeOn = false;
+        int tonePeriod;
+        int syncSquarePeriod;
+        double syncSquareCounter;
     };
 
     class SoundGenerator {
         private:
             std::shared_ptr<struct ayumi> ayumi;
-            int clockRate;
             Emul emul = defaultEmul;
-            bool removeDc = false;
             float gain;
+            double clockStep;
+            bool removeDc = false;
+            int envelopePeriod;
+            int envelopeShape;
+            int syncBuzzerPeriod;
+            double syncBuzzerCounter;
             AyChannel channels[3];
         public:
+            int clockRate;
             double sampleRate;
 
             const static Emul defaultEmul = YM2149;
@@ -41,6 +49,8 @@ namespace AyMidi {
             void setLevel(int index, int level);
             void setTonePeriod(int index, int period);
             void setPan(int index, float pan);
+            void setSyncSquare(int index, int period);
+            void setSyncBuzzer(int period);
             void process(float *left, float *right, const uint32_t size);
             int getClockRate() const;
     };

@@ -151,6 +151,7 @@ int ayumi_configure(struct ayumi* ay, int is_ym, double clock_rate, int sr) {
   for (i = 0; i < TONE_CHANNELS; i += 1) {
     ayumi_set_tone(ay, i, 1);
   }
+  ay->decimate_factor = DECIMATE_FACTOR;
   return ay->step < 1;
 }
 
@@ -165,8 +166,7 @@ void ayumi_set_pan(struct ayumi* ay, int index, double pan, int is_eqp) {
 }
 
 void ayumi_set_tone(struct ayumi* ay, int index, int period) {
-  period &= 0xfff;
-  ay->channels[index].tone_period = (period == 0) | period;
+  ay->channels[index].tone_period = period & 0xfff;
 }
 
 void ayumi_set_noise(struct ayumi* ay, int period) {
@@ -185,8 +185,7 @@ void ayumi_set_volume(struct ayumi* ay, int index, int volume) {
 }
 
 void ayumi_set_envelope(struct ayumi* ay, int period) {
-  period &= 0xffff;
-  ay->envelope_period = (period == 0) | period;
+  ay->envelope_period = period & 0xffff;
 }
 
 void ayumi_set_envelope_shape(struct ayumi* ay, int shape) {
@@ -286,8 +285,9 @@ static double decimate(double* x) {
   return y;
 }
 
-void ayumi_process(struct ayumi* ay) {
+int ayumi_process(struct ayumi* ay, int single_cycle) {
   int i;
+  int exit = 0;
   double y1;
   double* c_left = ay->interpolator_left.c;
   double* y_left = ay->interpolator_left.y;
@@ -295,8 +295,7 @@ void ayumi_process(struct ayumi* ay) {
   double* y_right = ay->interpolator_right.y;
   double* fir_left = &ay->fir_left[FIR_SIZE - ay->fir_index * DECIMATE_FACTOR];
   double* fir_right = &ay->fir_right[FIR_SIZE - ay->fir_index * DECIMATE_FACTOR];
-  ay->fir_index = (ay->fir_index + 1) % (FIR_SIZE / DECIMATE_FACTOR - 1);
-  for (i = DECIMATE_FACTOR - 1; i >= 0; i -= 1) {
+  for (i = ay->decimate_factor - 1; i >= 0; i -= 1) {
     ay->x += ay->step;
     if (ay->x >= 1) {
       ay->x -= 1;
@@ -317,12 +316,22 @@ void ayumi_process(struct ayumi* ay) {
       c_right[0] = 0.5 * y_right[1] + 0.25 * (y_right[0] + y_right[2]);
       c_right[1] = 0.5 * y1;
       c_right[2] = 0.25 * (y_right[3] - y_right[1] - y1);
+      if (single_cycle) {
+        exit = 1;
+      }
     }
     fir_left[i] = (c_left[2] * ay->x + c_left[1]) * ay->x + c_left[0];
     fir_right[i] = (c_right[2] * ay->x + c_right[1]) * ay->x + c_right[0];
+    if (exit) {
+      ay->decimate_factor = i;
+      return 0;
+    }
   }
   ay->left = decimate(fir_left);
   ay->right = decimate(fir_right);
+  ay->fir_index = (ay->fir_index + 1) % (FIR_SIZE / DECIMATE_FACTOR - 1);
+  ay->decimate_factor = DECIMATE_FACTOR;
+  return 1;
 }
 
 static double dc_filter(struct dc_filter* dc, int index, double x) {

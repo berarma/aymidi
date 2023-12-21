@@ -64,16 +64,8 @@ namespace AyMidi {
         channels[index]->release = release;
     }
 
-    void SynthEngine::setRingmodDepth(const int index, const float depth) {
-        channels[index]->ringmodDepth = depth;
-    }
-
-    void SynthEngine::setRingmodDetune(const int index, const float detune) {
-        channels[index]->ringmodDetune = detune;
-    }
-
-    void SynthEngine::setRingmodDuty(const int index, const float duty) {
-        channels[index]->ringmodDuty = duty;
+    void SynthEngine::setSyncSquarePeriod(const int index, const float period) {
+        channels[index]->syncSquarePeriod = period;
     }
 
     void SynthEngine::setSyncBuzzerPeriod(const int index, const float period) {
@@ -161,9 +153,6 @@ namespace AyMidi {
                     sg->setLevel(index, getLevel(voice, channel));
                 }
                 sg->enableNoise(index, channel->noisePeriod > 0);
-                d_debug("AY Channel: %d", index);
-                d_debug("note: %d", voice->note);
-                d_debug("velocity: %d", voice->velocity);
             }
             if (!programs[pgm].buzzer) {
                 updateEnvelope(voice, channel);
@@ -191,11 +180,21 @@ namespace AyMidi {
                 }
             }
             if (programs[pgm].buzzer) {
-                d_debug("buzzer on: %d", buzzerPeriod);
+                if (channel->syncBuzzerPeriod == 0.0f || channel->syncBuzzerPeriod == 1.0f) {
+                    sg->setSyncBuzzer(0);
+                } else {
+                    sg->setSyncBuzzer(buzzerPeriod);
+                    buzzerPeriod = std::round(buzzerPeriod / channel->syncBuzzerPeriod);
+                }
                 sg->setEnvelopePeriod(buzzerPeriod);
             }
             if (programs[pgm].square) {
-                d_debug("tone on: %d", tonePeriod);
+                if (channel->syncSquarePeriod == 0.5f || channel->syncSquarePeriod == 1.0f) {
+                    sg->setSyncSquare(index, 0);
+                } else {
+                    sg->setSyncSquare(index, tonePeriod);
+                    tonePeriod = std::round(tonePeriod / channel->syncSquarePeriod);
+                }
                 sg->setTonePeriod(index, tonePeriod);
             }
             sg->enableNoise(index, channel->noisePeriod > 0);
@@ -239,11 +238,11 @@ namespace AyMidi {
     }
 
     int SynthEngine::freqToTonePeriod(const double freq) const {
-        return std::round(sg->getClockRate() / 16.0 / freq);
+        return std::round(sg->clockRate / 16.0 / freq);
     }
 
     int SynthEngine::freqToBuzzerPeriod(const double freq) const {
-        return std::round(sg->getClockRate() / 256.0 / freq);
+        return std::round(sg->clockRate / 257.0 / freq);
     }
 
     int SynthEngine::getTonePeriod(const double note) const {

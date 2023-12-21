@@ -22,8 +22,8 @@ namespace AyMidi {
                 {  false, true,  false, true,  }, // Pgm 1
                 {  true,  true,  false, true,  }, // Pgm 2
                 {  true,  true,  false, false, }, // Pgm 3
-                {  true,  true,  true,  false, }, // Pgm 4
-                {  true,  true,  true,  true,  }, // Pgm 5
+                {  false, false, false, false, }, // Pgm 4
+                {  false, false, false, false, }, // Pgm 5
                 {  false, false, false, false, }, // Pgm 6
                 {  false, false, false, false, }, // Pgm 7
                 {  false, false, false, false, }, // Pgm 8
@@ -63,9 +63,7 @@ namespace AyMidi {
             void setDecay(const int index, const int decay);
             void setSustain(const int index, const float sustain);
             void setRelease(const int index, const int release);
-            void setRingmodDepth(const int index, const float depth);
-            void setRingmodDetune(const int index, const float detune);
-            void setRingmodDuty(const int index, const float duty);
+            void setSyncSquarePeriod(const int index, const float period);
             void setSyncBuzzerPeriod(const int index, const float period);
             void setUpdateRate(int rate);
     };

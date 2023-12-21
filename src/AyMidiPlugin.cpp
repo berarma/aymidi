@@ -28,9 +28,7 @@ class AyMidiPlugin : public Plugin {
         DECAY,
         SUSTAIN,
         RELEASE,
-        RINGMODDEPTH,
-        RINGMODDETUNE,
-        RINGMODDUTY,
+        SYNCSQUAREPERIOD,
         SYNCBUZZERPERIOD,
         NUM_PARAMETERS
     };
@@ -231,29 +229,13 @@ class AyMidiPlugin : public Plugin {
                     parameter.ranges.def = 0;
                     parameter.midiCC     = 79;
                     break;
-                case RINGMODDEPTH:
-                    parameter.name       = "Ringmod Depth";
-                    parameter.symbol     = "RINGDEPTH";
-                    parameter.ranges.min = 0;
-                    parameter.ranges.max = 127;
-                    parameter.ranges.def = 0;
-                    parameter.midiCC     = 80;
-                    break;
-                case RINGMODDETUNE:
-                    parameter.name       = "Ringmod Detune";
-                    parameter.symbol     = "RINGDETUNE";
-                    parameter.ranges.min = -1.0f;
+                case SYNCSQUAREPERIOD:
+                    parameter.name       = "SyncSquare Period";
+                    parameter.symbol     = "SQP";
+                    parameter.ranges.min = 0.5f;
                     parameter.ranges.max = 1.0f;
-                    parameter.ranges.def = 0.0f;
-                    parameter.midiCC     = 81;
-                    break;
-                case RINGMODDUTY:
-                    parameter.name       = "Ringmod Duty";
-                    parameter.symbol     = "RINGDUTY";
-                    parameter.ranges.min = 0.0f;
-                    parameter.ranges.max = 1.0f;
-                    parameter.ranges.def = 0.5f;
-                    parameter.midiCC     = 82;
+                    parameter.ranges.def = 1.0f;
+                    parameter.midiCC     = 91;
                     break;
                 case SYNCBUZZERPERIOD:
                     parameter.name       = "SyncBuzzer Period";
@@ -261,7 +243,7 @@ class AyMidiPlugin : public Plugin {
                     parameter.ranges.min = 0.0f;
                     parameter.ranges.max = 1.0f;
                     parameter.ranges.def = 1.0f;
-                    parameter.midiCC     = 83;
+                    parameter.midiCC     = 92;
                     break;
             }
         }
@@ -303,12 +285,8 @@ class AyMidiPlugin : public Plugin {
                     return pSustain;
                 case RELEASE:
                     return pRelease;
-                case RINGMODDEPTH:
-                    return pRingmodDepth;
-                case RINGMODDETUNE:
-                    return pRingmodDepth;
-                case RINGMODDUTY:
-                    return pRingmodDuty;
+                case SYNCSQUAREPERIOD:
+                    return pSyncBuzzerPeriod;
                 case SYNCBUZZERPERIOD:
                     return pSyncBuzzerPeriod;
             }
@@ -378,17 +356,9 @@ class AyMidiPlugin : public Plugin {
                     pRelease = value;
                     synthEngine->setRelease(0, (int)pRelease);
                     break;
-                case RINGMODDEPTH:
-                    pRingmodDepth = value;
-                    synthEngine->setRingmodDepth(0, pRingmodDepth);
-                    break;
-                case RINGMODDETUNE:
-                    pRingmodDepth = value;
-                    synthEngine->setRingmodDetune(0, pRingmodDetune);
-                    break;
-                case RINGMODDUTY:
-                    pRingmodDuty = value;
-                    synthEngine->setRingmodDuty(0, pRingmodDuty);
+                case SYNCSQUAREPERIOD:
+                    pSyncSquarePeriod = value;
+                    synthEngine->setSyncSquarePeriod(0, pSyncSquarePeriod);
                     break;
                 case SYNCBUZZERPERIOD:
                     pSyncBuzzerPeriod = value;
@@ -445,9 +415,7 @@ class AyMidiPlugin : public Plugin {
         float pDecay;
         float pSustain;
         float pRelease;
-        float pRingmodDepth;
-        float pRingmodDetune;
-        float pRingmodDuty;
+        float pSyncSquarePeriod;
         float pSyncBuzzerPeriod;
 
         DISTRHO_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(AyMidiPlugin)

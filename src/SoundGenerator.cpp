@@ -6,25 +6,30 @@ extern "C" double AY_dac_table[];
 
 namespace AyMidi {
 
-extern "C" {
+    extern "C" {
 #include "ayumi.h"
-}
+    }
 
     SoundGenerator::SoundGenerator(double sampleRate, int clockRate) :
         sampleRate(sampleRate),
-        clockRate(clockRate),
         ayumi(std::make_shared<struct ayumi>())
     {
         ayumi_configure(&*ayumi, emul, clockRate, sampleRate);
-        
+        setClockRate(clockRate);
+
         for (int index = 0; index < 3; index++) {
             ayumi_set_pan(&*ayumi, index, 0.5, 1);
+            channels[index].syncSquarePeriod = 0;
+            channels[index].syncSquareCounter = 0.0;
         }
+        syncBuzzerPeriod = 0;
+        syncBuzzerCounter = 0.0;
     }
 
     int SoundGenerator::setClockRate(int clockRate) {
         ayumi->step = clockRate / (sampleRate * 8 * DECIMATE_FACTOR); // XXX Ayumi internals
         this->clockRate = clockRate;
+        this->clockStep = clockRate / sampleRate;
         return ayumi->step < 1;
     }
 
@@ -41,20 +46,16 @@ extern "C" {
     }
 
     void SoundGenerator::setEnvelopePeriod(int period) {
+        envelopePeriod = period;
         ayumi_set_envelope(&*ayumi, period);
     }
 
     void SoundGenerator::setEnvelopeShape(int shape) {
-        static int lastShape = -1;
-        if (shape == lastShape) {
+        if (shape == envelopeShape) {
             return;
         }
         ayumi_set_envelope_shape(&*ayumi, shape);
-        lastShape = shape;
-    }
-
-    int SoundGenerator::getClockRate() const {
-        return clockRate;
+        envelopeShape = shape;
     }
 
     void SoundGenerator::setGain(float gain) {
@@ -63,20 +64,20 @@ extern "C" {
 
     void SoundGenerator::enableTone(int index, bool enable) {
         auto& channel = channels[index];
-        channel.tone_off = !enable;
-        ayumi_set_mixer(&*ayumi, index, channel.tone_off, channel.noise_off, channel.envelope_on);
+        channel.toneOff = !enable;
+        ayumi_set_mixer(&*ayumi, index, channel.toneOff, channel.noiseOff, channel.envelopeOn);
     }
 
     void SoundGenerator::enableNoise(int index, bool enable) {
         auto& channel = channels[index];
-        channel.noise_off = !enable;
-        ayumi_set_mixer(&*ayumi, index, channel.tone_off, channel.noise_off, channel.envelope_on);
+        channel.noiseOff = !enable;
+        ayumi_set_mixer(&*ayumi, index, channel.toneOff, channel.noiseOff, channel.envelopeOn);
     }
 
     void SoundGenerator::enableEnvelope(int index, bool enable) {
         auto& channel = channels[index];
-        channel.envelope_on = enable;
-        ayumi_set_mixer(&*ayumi, index, channel.tone_off, channel.noise_off, channel.envelope_on);
+        channel.envelopeOn = enable;
+        ayumi_set_mixer(&*ayumi, index, channel.toneOff, channel.noiseOff, channel.envelopeOn);
     }
 
     void SoundGenerator::setLevel(int index, int level) {
@@ -84,6 +85,7 @@ extern "C" {
     }
 
     void SoundGenerator::setTonePeriod(int index, int period) {
+        channels[index].tonePeriod = period;
         ayumi_set_tone(&*ayumi, index, period);
     }
 
@@ -91,9 +93,56 @@ extern "C" {
         ayumi_set_pan(&*ayumi, index, pan, 1);
     }
 
+    void SoundGenerator::setSyncSquare(int index, int period) {
+        channels[index].syncSquarePeriod = period;
+        if (period == 0) {
+            channels[index].syncSquareCounter = 0;
+        }
+    }
+
+    void SoundGenerator::setSyncBuzzer(int period) {
+        syncBuzzerPeriod = period;
+        if (period == 0) {
+            syncBuzzerCounter = 0;
+        }
+    }
+
     void SoundGenerator::process(float* left, float* right, const uint32_t size) {
+        bool sync = false;
+
         for (int i = 0; i < size; i++) {
-            ayumi_process(&*ayumi);
+
+            if (syncBuzzerPeriod) {
+                if (syncBuzzerCounter >= syncBuzzerPeriod) {
+                    syncBuzzerCounter -= syncBuzzerPeriod;
+                    ayumi_set_envelope_shape(&*ayumi, envelopeShape);
+                }
+                syncBuzzerCounter += clockStep / 256.0;
+            }
+            for (int i = 0; i < 3; i++) {
+                if (channels[i].syncSquarePeriod) {
+                    if (channels[i].syncSquareCounter >= channels[i].syncSquarePeriod) {
+                        ayumi_set_tone(&*ayumi, i, 0);
+                        sync = true;
+                    } else {
+                        channels[i].syncSquareCounter += clockStep / 16.0;
+                    }
+                }
+            }
+            if (sync) {
+                ayumi_process(&*ayumi, true);
+                for (int i = 0; i < 3; i++) {
+                    if (channels[i].syncSquarePeriod) {
+                        if (channels[i].syncSquareCounter >= channels[i].syncSquarePeriod) {
+                            channels[i].syncSquareCounter -= channels[i].syncSquarePeriod;
+                            channels[i].syncSquareCounter += clockStep / 16.0;
+                            ayumi_set_tone(&*ayumi, i, channels[i].tonePeriod);
+                        }
+                    }
+                }
+            }
+
+            ayumi_process(&*ayumi, false);
             if (removeDc) {
                 ayumi_remove_dc(&*ayumi);
             }
