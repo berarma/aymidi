@@ -1,7 +1,6 @@
 #include <algorithm>
 #include <cmath>
 #include <limits>
-#include <lv2/midi/midi.h>
 #include "DistrhoUtils.hpp"
 #include "SynthEngine.hpp"
 
@@ -78,11 +77,11 @@ namespace AyMidi {
 
         Channel* channel = &*channels[index];
 
-        switch (lv2_midi_message_type(message)) {
-            case LV2_MIDI_MSG_NOTE_OFF:
+        switch (getMidiMsgStatus(message)) {
+            case MIDI_MSG_NOTE_OFF:
                 channel->cmdNoteOff(message[1], message[2]);
                 break;
-            case LV2_MIDI_MSG_NOTE_ON:
+            case MIDI_MSG_NOTE_ON:
                 {
                     auto voice = channel->cmdNoteOn(message[1], message[2]);
                     auto slotIndex = voicePool.back();
@@ -93,37 +92,37 @@ namespace AyMidi {
                     std::rotate(voicePool.begin(), voicePool.end() - 1, voicePool.end());
                 }
                 break;
-            case LV2_MIDI_MSG_NOTE_PRESSURE:
+            case MIDI_MSG_KEY_PRESSURE:
                 channel->cmdKeyPressure(message[1], message[2]);
                 break;
-            case LV2_MIDI_MSG_CHANNEL_PRESSURE:
+            case MIDI_MSG_CHANNEL_PRESSURE:
                 channel->pressure = message[1] / 127.0f;
                 break;
-            case LV2_MIDI_MSG_BENDER:
+            case MIDI_MSG_PITCH_BEND:
                 channel->pitchBend = centerValue(message[1] + (message[2] << 7), 14);
                 break;
-            case LV2_MIDI_MSG_PGM_CHANGE:
+            case MIDI_MSG_PGM_CHANGE:
                 channel->program = std::min<uint8_t>(39, message[1]);
                 break;
-            case LV2_MIDI_MSG_RESET:
+            case MIDI_MSG_RESET:
                 channel->cmdReset();
                 break;
-            case LV2_MIDI_MSG_CONTROLLER:
+            case MIDI_MSG_CONTROL:
                 switch (message[1]) {
-                    case LV2_MIDI_CTL_RESET_CONTROLLERS:
+                    case MIDI_CTL_RESET_CONTROLLERS:
                         channel->cmdResetCC();
                         break;
-                    case LV2_MIDI_CTL_ALL_SOUNDS_OFF:
-                    case LV2_MIDI_CTL_ALL_NOTES_OFF:
+                    case MIDI_CTL_ALL_SOUNDS_OFF:
+                    case MIDI_CTL_ALL_NOTES_OFF:
                         channel->cmdAllNotesOff();
                         break;
-                    case LV2_MIDI_CTL_MSB_MODWHEEL:
+                    case MIDI_CTL_MSB_MODWHEEL:
                         channel->modWheel = centerValue(message[2], 7);
                         break;
-                    case LV2_MIDI_CTL_MSB_PAN:
+                    case MIDI_CTL_MSB_PAN:
                         channel->pan = (centerValue(message[2], 7) + 1.0f) / 2.0f;
                         break;
-                    case LV2_MIDI_CTL_MSB_MAIN_VOLUME:
+                    case MIDI_CTL_MSB_MAIN_VOLUME:
                         channel->volume = message[2] / 127.0;
                         break;
                 }
@@ -310,6 +309,16 @@ namespace AyMidi {
         }
         voice->envelopeCounter = std::numeric_limits<unsigned>::max();
         voice->envelopeLevel = channel->sustain;
+    }
+
+    MidiMsgStatus SynthEngine::getMidiMsgStatus(const uint8_t* msg) {
+        uint8_t hNibble = msg[0] & 0xF0;
+
+        if (hNibble == 0xF0) {
+            return (MidiMsgStatus)msg[0];
+        }
+
+        return (MidiMsgStatus)hNibble;
     }
 
 }
