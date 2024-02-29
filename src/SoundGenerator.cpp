@@ -121,11 +121,10 @@ namespace AyMidi {
             }
             for (int i = 0; i < 3; i++) {
                 if (channels[i].syncSquarePeriod) {
+                    channels[i].syncSquareCounter += clockStep / 16.0;
                     if (channels[i].syncSquareCounter >= channels[i].syncSquarePeriod) {
                         ayumi_set_tone(&*ayumi, i, 0);
                         sync = true;
-                    } else {
-                        channels[i].syncSquareCounter += clockStep / 16.0;
                     }
                 }
             }
@@ -135,7 +134,6 @@ namespace AyMidi {
                     if (channels[i].syncSquarePeriod) {
                         if (channels[i].syncSquareCounter >= channels[i].syncSquarePeriod) {
                             channels[i].syncSquareCounter -= channels[i].syncSquarePeriod;
-                            channels[i].syncSquareCounter += clockStep / 16.0;
                             ayumi_set_tone(&*ayumi, i, channels[i].tonePeriod);
                         }
                     }

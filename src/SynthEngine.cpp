@@ -188,7 +188,7 @@ namespace AyMidi {
                 sg->setEnvelopePeriod(buzzerPeriod);
             }
             if (programs[pgm].square) {
-                if (channel->syncSquarePeriod == 0.5f || channel->syncSquarePeriod == 1.0f) {
+                if (channel->syncSquarePeriod == 1.0f) {
                     sg->setSyncSquare(index, 0);
                 } else {
                     sg->setSyncSquare(index, tonePeriod);
