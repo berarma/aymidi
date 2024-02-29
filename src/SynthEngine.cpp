@@ -23,54 +23,6 @@ namespace AyMidi {
         updateCounter = 0;
     }
 
-    void SynthEngine::setNoisePeriod(const int index, const int period) {
-        channels[index]->noisePeriod = period;
-    }
-
-    void SynthEngine::setMultRatio(const int index, const int ratio) {
-        channels[index]->multRatio = ratio;
-    }
-
-    void SynthEngine::setMultDetune(const int index, const int detune) {
-        channels[index]->multDetune = detune;
-    }
-
-    void SynthEngine::setArpeggioSpeed(const int index, const int speed) {
-        channels[index]->arpeggioSpeed = speed;
-    }
-
-    void SynthEngine::setAttackPitch(const int index, const int pitch) {
-        channels[index]->attackPitch = pitch;
-    }
-
-    void SynthEngine::setAttack(const int index, const int attack) {
-        channels[index]->attack = attack;
-    }
-
-    void SynthEngine::setHold(const int index, const int hold) {
-        channels[index]->hold = hold;
-    }
-
-    void SynthEngine::setDecay(const int index, const int decay) {
-        channels[index]->decay = decay;
-    }
-
-    void SynthEngine::setSustain(const int index, const float sustain) {
-        channels[index]->sustain = sustain;
-    }
-
-    void SynthEngine::setRelease(const int index, const int release) {
-        channels[index]->release = release;
-    }
-
-    void SynthEngine::setSyncSquarePeriod(const int index, const float period) {
-        channels[index]->syncSquarePeriod = period;
-    }
-
-    void SynthEngine::setSyncBuzzerPeriod(const int index, const float period) {
-        channels[index]->syncBuzzerPeriod = period;
-    }
-
     void SynthEngine::midiSend(const uint8_t* message) {
         const uint8_t status = message[0];
         const int index = status & 0xF;
@@ -125,10 +77,46 @@ namespace AyMidi {
                     case MIDI_CTL_MSB_MAIN_VOLUME:
                         channel->volume = message[2] / 127.0;
                         break;
+                    /* AY/YM Effects */
+                    case MIDI_CTL_AY_NOISE_PERIOD:
+                        channels[index]->noisePeriod = message[2] / 4;
+                        break;
+                    case MIDI_CTL_AY_BUZ_SQR_RATIO:
+                        channels[index]->multRatio = message[2] / 16;
+                        break;
+                    case MIDI_CTL_AY_BUZ_SQR_DETUNE:
+                        channels[index]->multDetune = message[2] - 64;
+                        break;
+                    case MIDI_CTL_AY_ARPEGGIO_SPEED:
+                        channels[index]->arpeggioSpeed = message[2] - 64;
+                        break;
+                    case MIDI_CTL_AY_ATTACK_PITCH:
+                        channels[index]->attackPitch = message[2] - 64;
+                        break;
+                    case MIDI_CTL_AY_ATTACK:
+                        channels[index]->attack = message[2];
+                        break;
+                    case MIDI_CTL_AY_HOLD:
+                        channels[index]->hold = message[2];
+                        break;
+                    case MIDI_CTL_AY_DECAY:
+                        channels[index]->decay = message[2];
+                        break;
+                    case MIDI_CTL_AY_SUSTAIN:
+                        channels[index]->sustain = message[2] / 127.0f;
+                        break;
+                    case MIDI_CTL_AY_RELEASE:
+                        channels[index]->release = message[2];
+                        break;
+                    case MIDI_CTL_AY_SYNCSQUARE_PERIOD:
+                        channels[index]->syncSquarePeriod = message[2] / 127.0f / 2.0f + 0.5f;
+                        break;
+                    case MIDI_CTL_AY_SYNCBUZZER_PERIOD:
+                        channels[index]->syncBuzzerPeriod = message[2] / 127.0f;
+                        break;
+                    default:
+                        break;
                 }
-                break;
-            default:
-                break;
         }
     }
 
@@ -179,7 +167,7 @@ namespace AyMidi {
                 }
             }
             if (programs[pgm].buzzer) {
-                if (channel->syncBuzzerPeriod == 0.0f || channel->syncBuzzerPeriod == 1.0f) {
+                if (channel->syncBuzzerPeriod == 1.0f) {
                     sg->setSyncBuzzer(0);
                 } else {
                     sg->setSyncBuzzer(buzzerPeriod);
@@ -241,7 +229,7 @@ namespace AyMidi {
     }
 
     int SynthEngine::freqToBuzzerPeriod(const double freq) const {
-        return std::round(sg->clockRate / 257.0 / freq);
+        return std::round(sg->clockRate / 256.0 / freq);
     }
 
     int SynthEngine::getTonePeriod(const double note) const {

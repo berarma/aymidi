@@ -19,21 +19,21 @@
 
 ## CCs
 
-| CC | Function                         | Programs  |
-|----|----------------------------------|-----------|
-| 70 | Noise period/off                 |           |
-| 71 | Buzzer/Square ratio              | 2,3       |
-| 72 | Buzzer/Square detune             | 2,3       |
-| 73 | Arpeggio speed                   |           |
-| 74 | Attack Pitch                     |           |
-| 75 | Attack                           |           |
-| 76 | Hold                             |           |
-| 77 | Decay                            |           |
-| 78 | Sustain                          |           |
-| 79 | Release                          |           |
-| 91 | SyncSquare period                | 0,2,3     |
-| 92 | SyncBuzzer period                | 0,2,3     |
-| 93 | SID detune                       | 4         |
+| CC  | Function                         | Programs  |
+|-----|----------------------------------|-----------|
+| 102 | Noise period/off                 |           |
+| 103 | Buzzer/Square ratio              | 2,3       |
+| 104 | Buzzer/Square detune             | 2,3       |
+| 105 | Arpeggio speed                   |           |
+| 106 | Attack Pitch                     |           |
+| 107 | Attack                           |           |
+| 108 | Hold                             |           |
+| 109 | Decay                            |           |
+| 110 | Sustain                          |           |
+| 111 | Release                          |           |
+| 112 | SyncSquare period                | 0,2,3     |
+| 113 | SyncBuzzer period                | 0,2,3     |
+| 114 | SID detune                       | 4         |
 
-Pitch Attack is how much to raise/lower the tone in semitones during the
+Attack Pitch is how much to raise/lower the tone in semitones during the
 Attack/Hold phases.

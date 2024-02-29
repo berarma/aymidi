@@ -18,18 +18,6 @@ class AyMidiPlugin : public Plugin {
         CLOCKRATE,
         EMUL,
         UPDATERATE,
-        NOISEPERIOD,
-        MULTRATIO,
-        MULTDETUNE,
-        ARPEGGIOSPEED,
-        ATTACKPITCH,
-        ATTACK,
-        HOLD,
-        DECAY,
-        SUSTAIN,
-        RELEASE,
-        SYNCSQUAREPERIOD,
-        SYNCBUZZERPERIOD,
         NUM_PARAMETERS
     };
 
@@ -141,110 +129,6 @@ class AyMidiPlugin : public Plugin {
                     parameter.ranges.max = 300;
                     parameter.ranges.def = 50;
                     break;
-                case NOISEPERIOD:
-                    parameter.hints     |= kParameterIsInteger;
-                    parameter.name       = "Noise Period";
-                    parameter.symbol     = "NOISE";
-                    parameter.ranges.min = 0;
-                    parameter.ranges.max = 31;
-                    parameter.ranges.def = 0;
-                    parameter.midiCC     = 70;
-                    break;
-                case MULTRATIO:
-                    parameter.hints     |= kParameterIsInteger;
-                    parameter.name       = "Buzzer/Square Ratio";
-                    parameter.symbol     = "MRATIO";
-                    parameter.ranges.min = 0;
-                    parameter.ranges.max = 7;
-                    parameter.ranges.def = 0;
-                    parameter.midiCC     = 71;
-                    break;
-                case MULTDETUNE:
-                    parameter.hints     |= kParameterIsInteger;
-                    parameter.name       = "Buzzer/Square Detune";
-                    parameter.symbol     = "MDETUNE";
-                    parameter.ranges.min = -64;
-                    parameter.ranges.max = 63;
-                    parameter.ranges.def = 0;
-                    parameter.midiCC     = 72;
-                    break;
-                case ARPEGGIOSPEED:
-                    parameter.name       = "Arpeggio Speed";
-                    parameter.symbol     = "ARPEGGIO";
-                    parameter.ranges.min = -1.0f;
-                    parameter.ranges.max = 1.0f;
-                    parameter.ranges.def = 0.0f;
-                    parameter.midiCC     = 73;
-                    break;
-                case ATTACKPITCH:
-                    parameter.hints     |= kParameterIsInteger;
-                    parameter.name       = "Attack Pitch";
-                    parameter.symbol     = "ATKPITCH";
-                    parameter.ranges.min = -64;
-                    parameter.ranges.max = 63;
-                    parameter.ranges.def = 0;
-                    parameter.midiCC     = 74;
-                    break;
-                case ATTACK:
-                    parameter.hints     |= kParameterIsInteger;
-                    parameter.name       = "Attack";
-                    parameter.symbol     = "ATTACK";
-                    parameter.ranges.min = 0;
-                    parameter.ranges.max = 127;
-                    parameter.ranges.def = 0;
-                    parameter.midiCC     = 75;
-                    break;
-                case HOLD:
-                    parameter.hints     |= kParameterIsInteger;
-                    parameter.name       = "Hold";
-                    parameter.symbol     = "HOLD";
-                    parameter.ranges.min = 0;
-                    parameter.ranges.max = 127;
-                    parameter.ranges.def = 0;
-                    parameter.midiCC     = 76;
-                    break;
-                case DECAY:
-                    parameter.hints     |= kParameterIsInteger;
-                    parameter.name       = "Decay";
-                    parameter.symbol     = "DECAY";
-                    parameter.ranges.min = 0;
-                    parameter.ranges.max = 127;
-                    parameter.ranges.def = 0;
-                    parameter.midiCC     = 77;
-                    break;
-                case SUSTAIN:
-                    parameter.name       = "Sustain";
-                    parameter.symbol     = "SUSTAIN";
-                    parameter.ranges.min = 0.0f;
-                    parameter.ranges.max = 1.0f;
-                    parameter.ranges.def = 1.0f;
-                    parameter.midiCC     = 78;
-                    break;
-                case RELEASE:
-                    parameter.hints     |= kParameterIsInteger;
-                    parameter.name       = "Release";
-                    parameter.symbol     = "RELEASE";
-                    parameter.ranges.min = 0;
-                    parameter.ranges.max = 127;
-                    parameter.ranges.def = 0;
-                    parameter.midiCC     = 79;
-                    break;
-                case SYNCSQUAREPERIOD:
-                    parameter.name       = "SyncSquare Period";
-                    parameter.symbol     = "SQP";
-                    parameter.ranges.min = 0.5f;
-                    parameter.ranges.max = 1.0f;
-                    parameter.ranges.def = 1.0f;
-                    parameter.midiCC     = 91;
-                    break;
-                case SYNCBUZZERPERIOD:
-                    parameter.name       = "SyncBuzzer Period";
-                    parameter.symbol     = "SBP";
-                    parameter.ranges.min = 0.0f;
-                    parameter.ranges.max = 1.0f;
-                    parameter.ranges.def = 1.0f;
-                    parameter.midiCC     = 92;
-                    break;
             }
         }
 
@@ -265,30 +149,6 @@ class AyMidiPlugin : public Plugin {
                     return pEmul;
                 case UPDATERATE:
                     return pUpdateRate;
-                case NOISEPERIOD:
-                    return pNoisePeriod;
-                case MULTRATIO:
-                    return pMultRatio;
-                case MULTDETUNE:
-                    return pMultDetune;
-                case ARPEGGIOSPEED:
-                    return pArpeggioSpeed;
-                case ATTACKPITCH:
-                    return pAttackPitch;
-                case ATTACK:
-                    return pAttack;
-                case HOLD:
-                    return pHold;
-                case DECAY:
-                    return pDecay;
-                case SUSTAIN:
-                    return pSustain;
-                case RELEASE:
-                    return pRelease;
-                case SYNCSQUAREPERIOD:
-                    return pSyncBuzzerPeriod;
-                case SYNCBUZZERPERIOD:
-                    return pSyncBuzzerPeriod;
             }
 
             return 0.0f;
@@ -315,54 +175,6 @@ class AyMidiPlugin : public Plugin {
                 case UPDATERATE:
                     pUpdateRate = value;
                     synthEngine->setUpdateRate((int)pUpdateRate);
-                    break;
-                case NOISEPERIOD:
-                    pNoisePeriod = value;
-                    synthEngine->setNoisePeriod(0, (int)pNoisePeriod);
-                    break;
-                case MULTRATIO:
-                    pMultRatio = value;
-                    synthEngine->setMultRatio(0, (int)pMultRatio);
-                    break;
-                case MULTDETUNE:
-                    pMultDetune = value;
-                    synthEngine->setMultDetune(0, (int)pMultDetune);
-                    break;
-                case ARPEGGIOSPEED:
-                    pArpeggioSpeed = value;
-                    synthEngine->setArpeggioSpeed(0, (int)pArpeggioSpeed);
-                    break;
-                case ATTACKPITCH:
-                    pAttackPitch = value;
-                    synthEngine->setAttackPitch(0, (int)pAttackPitch);
-                    break;
-                case ATTACK:
-                    pAttack = value;
-                    synthEngine->setAttack(0, (int)pAttack);
-                    break;
-                case HOLD:
-                    pHold = value;
-                    synthEngine->setHold(0, (int)pHold);
-                    break;
-                case DECAY:
-                    pDecay = value;
-                    synthEngine->setDecay(0, (int)pDecay);
-                    break;
-                case SUSTAIN:
-                    pSustain = value;
-                    synthEngine->setSustain(0, pSustain);
-                    break;
-                case RELEASE:
-                    pRelease = value;
-                    synthEngine->setRelease(0, (int)pRelease);
-                    break;
-                case SYNCSQUAREPERIOD:
-                    pSyncSquarePeriod = value;
-                    synthEngine->setSyncSquarePeriod(0, pSyncSquarePeriod);
-                    break;
-                case SYNCBUZZERPERIOD:
-                    pSyncBuzzerPeriod = value;
-                    synthEngine->setSyncBuzzerPeriod(0, pSyncBuzzerPeriod);
                     break;
             }
         }
@@ -405,18 +217,6 @@ class AyMidiPlugin : public Plugin {
         float pClockRate;
         float pEmul;
         float pUpdateRate;
-        float pNoisePeriod;
-        float pMultRatio;
-        float pMultDetune;
-        float pArpeggioSpeed;
-        float pAttackPitch;
-        float pAttack;
-        float pHold;
-        float pDecay;
-        float pSustain;
-        float pRelease;
-        float pSyncSquarePeriod;
-        float pSyncBuzzerPeriod;
 
         DISTRHO_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(AyMidiPlugin)
 };
