@@ -127,21 +127,22 @@ namespace AyMidi {
                 continue;
             }
             const auto& channel = channels[voice->channelId];
-            auto pgm = channel->program;
-            int waveform = pgm / 10;
-            pgm = pgm % 10;
+            const int waveform = (channel->program - 1) / 3;
+            const bool buzzer = channel->program > 0;
+            const bool square = ((channel->program - 1) % 3) != 0;
+            const bool baseBuzzer = channel->program != 0 && ((channel->program - 1) % 3) < 2;
             if (voice->isNew) {
                 voice->isNew = false;
-                sg->enableEnvelope(index, programs[pgm].buzzer);
-                sg->enableTone(index, programs[pgm].square);
-                if (programs[pgm].buzzer) {
+                sg->enableEnvelope(index, buzzer);
+                sg->enableTone(index, square);
+                if (buzzer) {
                     sg->setEnvelopeShape(waveform * 2 + 8);
                 } else {
                     sg->setLevel(index, getLevel(voice, channel));
                 }
                 sg->enableNoise(index, channel->noisePeriod > 0);
             }
-            if (!programs[pgm].buzzer) {
+            if (!buzzer) {
                 updateEnvelope(voice, channel);
                 sg->setLevel(index, getLevel(voice, channel));
             }
@@ -155,18 +156,18 @@ namespace AyMidi {
             }
             int tonePeriod;
             int buzzerPeriod;
-            if (programs[pgm].buzzer && programs[pgm].baseBuzzer) {
+            if (buzzer && baseBuzzer) {
                 buzzerPeriod = getBuzzerPeriod(voice, channel);
-                if (programs[pgm].square && !programs[pgm].fixed) {
+                if (square) {
                     tonePeriod = getTonePeriod(buzzerPeriod, channel);
                 }
-            } else if (programs[pgm].square && !programs[pgm].baseBuzzer) {
+            } else if (square && !baseBuzzer) {
                 tonePeriod = getTonePeriod(voice, channel);
-                if (programs[pgm].buzzer && !programs[pgm].fixed) {
+                if (buzzer) {
                     buzzerPeriod = getBuzzerPeriod(tonePeriod, channel);
                 }
             }
-            if (programs[pgm].buzzer) {
+            if (buzzer) {
                 if (channel->syncBuzzerPeriod == 1.0f) {
                     sg->setSyncBuzzer(0);
                 } else {
@@ -175,7 +176,7 @@ namespace AyMidi {
                 }
                 sg->setEnvelopePeriod(buzzerPeriod);
             }
-            if (programs[pgm].square) {
+            if (square) {
                 if (channel->syncSquarePeriod == 1.0f) {
                     sg->setSyncSquare(index, 0);
                 } else {

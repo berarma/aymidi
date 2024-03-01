@@ -7,13 +7,6 @@
 
 namespace AyMidi {
 
-    struct Program {
-        bool square;
-        bool buzzer;
-        bool fixed; // Always the non-base tone
-        bool baseBuzzer;
-    };
-
     typedef enum {
         MIDI_MSG_NOTE_OFF         = 0x80, /* Note Off */
         MIDI_MSG_NOTE_ON          = 0x90, /* Note On */
@@ -127,19 +120,6 @@ namespace AyMidi {
 
     class SynthEngine {
         private:
-            struct Program programs[10] = {
-                // square buzzer fixed  bBuzzr
-                {  true,  false, false, false, }, // Pgm 0
-                {  false, true,  false, true,  }, // Pgm 1
-                {  true,  true,  false, true,  }, // Pgm 2
-                {  true,  true,  false, false, }, // Pgm 3
-                {  false, false, false, false, }, // Pgm 4
-                {  false, false, false, false, }, // Pgm 5
-                {  false, false, false, false, }, // Pgm 6
-                {  false, false, false, false, }, // Pgm 7
-                {  false, false, false, false, }, // Pgm 8
-                {  false, false, false, false, }, // Pgm 9
-            };
             std::shared_ptr<SoundGenerator> sg;
             std::shared_ptr<Channel> channels[16];
             std::shared_ptr<Voice> voices[3];
