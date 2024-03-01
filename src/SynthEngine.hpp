@@ -137,7 +137,9 @@ namespace AyMidi {
             int getBuzzerPeriod(const std::shared_ptr<Voice> voice, const std::shared_ptr<Channel> channel) const;
             int getBuzzerPeriod(const int tonePeriod, const std::shared_ptr<Channel> channel) const;
             void updateEnvelope(std::shared_ptr<Voice> voice, std::shared_ptr<Channel> channel);
-            float centerValue(int value, int bits) const;
+            int spreadInt(const int value, const int bits, const int max) const;
+            float unsignedFloat(int value, int bits) const;
+            float signedFloat(int value, int bits) const;
             void synch();
             MidiMsgStatus getMidiMsgStatus(const uint8_t* msg);
 

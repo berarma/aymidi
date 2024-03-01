@@ -51,7 +51,7 @@ namespace AyMidi {
                 channel->pressure = message[1] / 127.0f;
                 break;
             case MIDI_MSG_PITCH_BEND:
-                channel->pitchBend = centerValue(message[1] + (message[2] << 7), 14);
+                channel->pitchBend = signedFloat(message[1] + (message[2] << 7), 14);
                 break;
             case MIDI_MSG_PGM_CHANGE:
                 channel->program = std::min<uint8_t>(39, message[1]);
@@ -69,29 +69,29 @@ namespace AyMidi {
                         channel->cmdAllNotesOff();
                         break;
                     case MIDI_CTL_MSB_MODWHEEL:
-                        channel->modWheel = centerValue(message[2], 7);
+                        channel->modWheel = signedFloat(message[2], 7);
                         break;
                     case MIDI_CTL_MSB_PAN:
-                        channel->pan = (centerValue(message[2], 7) + 1.0f) / 2.0f;
+                        channel->pan = unsignedFloat(message[2], 7);
                         break;
                     case MIDI_CTL_MSB_MAIN_VOLUME:
                         channel->volume = message[2] / 127.0;
                         break;
                     /* AY/YM Effects */
                     case MIDI_CTL_AY_NOISE_PERIOD:
-                        channels[index]->noisePeriod = message[2] / 4;
+                        channels[index]->noisePeriod = spreadInt(message[2], 7, 32);
                         break;
                     case MIDI_CTL_AY_BUZ_SQR_RATIO:
-                        channels[index]->multRatio = message[2] / 16;
+                        channels[index]->multRatio = spreadInt(message[2], 7, 8);
                         break;
                     case MIDI_CTL_AY_BUZ_SQR_DETUNE:
-                        channels[index]->multDetune = message[2] - 64;
+                        channels[index]->multDetune = signedFloat(message[2], 7) * 63;
                         break;
                     case MIDI_CTL_AY_ARPEGGIO_SPEED:
-                        channels[index]->arpeggioSpeed = message[2] - 64;
+                        channels[index]->arpeggioSpeed = signedFloat(message[2], 7) * 63;
                         break;
                     case MIDI_CTL_AY_ATTACK_PITCH:
-                        channels[index]->attackPitch = message[2] - 64;
+                        channels[index]->attackPitch = signedFloat(message[2], 7) * 63;
                         break;
                     case MIDI_CTL_AY_ATTACK:
                         channels[index]->attack = message[2];
@@ -217,7 +217,15 @@ namespace AyMidi {
         }
     }
 
-    float SynthEngine::centerValue(int value, int bits) const {
+    int SynthEngine::spreadInt(const int value, const int bits, const int max) const {
+        return value / ((1 << bits) / max);
+    }
+
+    float SynthEngine::unsignedFloat(const int value, const int bits) const {
+        return (signedFloat(value, bits) + 1.0f) / 2.0f;
+    }
+
+    float SynthEngine::signedFloat(const int value, const int bits) const {
         return (value + (value == 0) - (1 << (bits - 1))) / (float)((1 << (bits - 1)) - 1);
     }
 
