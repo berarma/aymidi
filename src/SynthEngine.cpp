@@ -142,7 +142,11 @@ namespace AyMidi {
                 }
                 sg->enableNoise(index, channel->noisePeriod > 0);
             }
-            if (!buzzer) {
+            if (buzzer) {
+                if (voice->release && channel->release) {
+                    voice->remove = true;
+                }
+            } else {
                 updateEnvelope(voice, channel);
                 sg->setLevel(index, getLevel(voice, channel));
             }
