@@ -91,7 +91,7 @@ namespace AyMidi {
                         channels[index]->arpeggioSpeed = signedFloat(message[2], 7) * 63;
                         break;
                     case MIDI_CTL_AY_ATTACK_PITCH:
-                        channels[index]->attackPitch = signedFloat(message[2], 7) * 63;
+                        channels[index]->attackPitch = signedFloat(message[2], 7) * 12;
                         break;
                     case MIDI_CTL_AY_ATTACK:
                         channels[index]->attack = message[2];
@@ -256,7 +256,7 @@ namespace AyMidi {
     }
 
     int SynthEngine::getTonePeriod(const std::shared_ptr<Voice> voice, const std::shared_ptr<Channel> channel) const {
-        int note = voice->note;
+        double note = voice->note;
         if (channel->attackPitch && voice->envelopeCounter < (channel->attack + channel->hold)) {
             note += channel->attackPitch;
         }

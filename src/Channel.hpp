@@ -47,7 +47,7 @@ namespace AyMidi {
             int multRatio;
             int multDetune;
             int arpeggioSpeed;
-            int attackPitch;
+            float attackPitch;
             int attack;
             int hold;
             int decay;
