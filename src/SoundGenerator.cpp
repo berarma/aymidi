@@ -19,11 +19,7 @@ namespace AyMidi {
 
         for (int index = 0; index < 3; index++) {
             ayumi_set_pan(&*ayumi, index, 0.5, 1);
-            channels[index].syncSquarePeriod = 0;
-            channels[index].syncSquareCounter = 0.0;
         }
-        syncBuzzerPeriod = 0;
-        syncBuzzerCounter = 0.0;
     }
 
     int SoundGenerator::setClockRate(int clockRate) {
@@ -93,52 +89,8 @@ namespace AyMidi {
         ayumi_set_pan(&*ayumi, index, pan, 1);
     }
 
-    void SoundGenerator::setSyncSquare(int index, int period) {
-        channels[index].syncSquarePeriod = period;
-        if (period == 0) {
-            channels[index].syncSquareCounter = 0;
-        }
-    }
-
-    void SoundGenerator::setSyncBuzzer(int period) {
-        syncBuzzerPeriod = period;
-        if (period == 0) {
-            syncBuzzerCounter = 0;
-        }
-    }
-
     void SoundGenerator::process(float* left, float* right, const uint32_t size) {
-        bool sync = false;
-
         for (int i = 0; i < size; i++) {
-
-            if (syncBuzzerPeriod) {
-                if (syncBuzzerCounter >= syncBuzzerPeriod) {
-                    syncBuzzerCounter -= syncBuzzerPeriod;
-                    ayumi_set_envelope_shape(&*ayumi, envelopeShape);
-                }
-                syncBuzzerCounter += clockStep / 256.0;
-            }
-            for (int i = 0; i < 3; i++) {
-                if (channels[i].syncSquarePeriod) {
-                    channels[i].syncSquareCounter += clockStep / 16.0;
-                    if (channels[i].syncSquareCounter >= channels[i].syncSquarePeriod) {
-                        ayumi_set_tone(&*ayumi, i, 0);
-                        sync = true;
-                    }
-                }
-            }
-            if (sync) {
-                ayumi_process(&*ayumi, true);
-                for (int i = 0; i < 3; i++) {
-                    if (channels[i].syncSquarePeriod) {
-                        if (channels[i].syncSquareCounter >= channels[i].syncSquarePeriod) {
-                            channels[i].syncSquareCounter -= channels[i].syncSquarePeriod;
-                            ayumi_set_tone(&*ayumi, i, channels[i].tonePeriod);
-                        }
-                    }
-                }
-            }
 
             ayumi_process(&*ayumi, false);
             if (removeDc) {

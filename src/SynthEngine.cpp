@@ -87,9 +87,6 @@ namespace AyMidi {
                     case MIDI_CTL_AY_BUZ_SQR_DETUNE:
                         channels[index]->multDetune = signedFloat(message[2], 7) * 63;
                         break;
-                    case MIDI_CTL_AY_ARPEGGIO_SPEED:
-                        channels[index]->arpeggioSpeed = signedFloat(message[2], 7) * 63;
-                        break;
                     case MIDI_CTL_AY_ATTACK_PITCH:
                         channels[index]->attackPitch = signedFloat(message[2], 7) * 12;
                         break;
@@ -108,11 +105,8 @@ namespace AyMidi {
                     case MIDI_CTL_AY_RELEASE:
                         channels[index]->release = message[2];
                         break;
-                    case MIDI_CTL_AY_SYNCSQUARE_PERIOD:
-                        channels[index]->syncSquarePeriod = message[2] / 127.0f / 2.0f + 0.5f;
-                        break;
-                    case MIDI_CTL_AY_SYNCBUZZER_PERIOD:
-                        channels[index]->syncBuzzerPeriod = message[2] / 127.0f;
+                    case MIDI_CTL_AY_ARPEGGIO_SPEED:
+                        channels[index]->arpeggioSpeed = signedFloat(message[2], 7) * 63;
                         break;
                     default:
                         break;
@@ -172,21 +166,9 @@ namespace AyMidi {
                 }
             }
             if (buzzer) {
-                if (channel->syncBuzzerPeriod == 1.0f) {
-                    sg->setSyncBuzzer(0);
-                } else {
-                    sg->setSyncBuzzer(buzzerPeriod);
-                    buzzerPeriod = std::round(buzzerPeriod / channel->syncBuzzerPeriod);
-                }
                 sg->setEnvelopePeriod(buzzerPeriod);
             }
             if (square) {
-                if (channel->syncSquarePeriod == 1.0f) {
-                    sg->setSyncSquare(index, 0);
-                } else {
-                    sg->setSyncSquare(index, tonePeriod);
-                    tonePeriod = std::round(tonePeriod / channel->syncSquarePeriod);
-                }
                 sg->setTonePeriod(index, tonePeriod);
             }
             sg->enableNoise(index, channel->noisePeriod > 0);

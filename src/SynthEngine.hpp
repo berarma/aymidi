@@ -98,16 +98,13 @@ namespace AyMidi {
         MIDI_CTL_AY_NOISE_PERIOD      = 0x66, /* AY/YM Noise Period */
         MIDI_CTL_AY_BUZ_SQR_RATIO     = 0x67, /* AY/YM Noise Period */
         MIDI_CTL_AY_BUZ_SQR_DETUNE    = 0x68, /* AY/YM Noise Period */
-        MIDI_CTL_AY_ARPEGGIO_SPEED    = 0x69, /* AY/YM Noise Period */
-        MIDI_CTL_AY_ATTACK_PITCH      = 0x6A, /* AY/YM Noise Period */
-        MIDI_CTL_AY_ATTACK            = 0x6B, /* AY/YM Noise Period */
-        MIDI_CTL_AY_HOLD              = 0x6C, /* AY/YM Noise Period */
-        MIDI_CTL_AY_DECAY             = 0x6D, /* AY/YM Noise Period */
-        MIDI_CTL_AY_SUSTAIN           = 0x6E, /* AY/YM Noise Period */
-        MIDI_CTL_AY_RELEASE           = 0x6F, /* AY/YM Noise Period */
-        MIDI_CTL_AY_SYNCSQUARE_PERIOD = 0x70, /* AY/YM Noise Period */
-        MIDI_CTL_AY_SYNCBUZZER_PERIOD = 0x71, /* AY/YM Noise Period */
-        MIDI_CTL_AY_SID_TUNE          = 0x72, /* AY/YM Noise Period */
+        MIDI_CTL_AY_ATTACK_PITCH      = 0x69, /* AY/YM Noise Period */
+        MIDI_CTL_AY_ATTACK            = 0x6A, /* AY/YM Noise Period */
+        MIDI_CTL_AY_HOLD              = 0x6B, /* AY/YM Noise Period */
+        MIDI_CTL_AY_DECAY             = 0x6C, /* AY/YM Noise Period */
+        MIDI_CTL_AY_SUSTAIN           = 0x6D, /* AY/YM Noise Period */
+        MIDI_CTL_AY_RELEASE           = 0x6E, /* AY/YM Noise Period */
+        MIDI_CTL_AY_ARPEGGIO_SPEED    = 0x6F, /* AY/YM Noise Period */
         MIDI_CTL_ALL_SOUNDS_OFF       = 0x78, /* All Sounds Off */
         MIDI_CTL_RESET_CONTROLLERS    = 0x79, /* Reset All Controllers */
         MIDI_CTL_LOCAL_CONTROL_SWITCH = 0x7A, /* Local Control On/Off */
@@ -157,8 +154,6 @@ namespace AyMidi {
             void setDecay(const int index, const int decay);
             void setSustain(const int index, const float sustain);
             void setRelease(const int index, const int release);
-            void setSyncSquarePeriod(const int index, const float period);
-            void setSyncBuzzerPeriod(const int index, const float period);
             void setUpdateRate(int rate);
     };
 
