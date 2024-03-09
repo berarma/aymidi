@@ -130,29 +130,23 @@ namespace AyMidi {
             const bool buzzer = channel->program == 1 || channel->mixBoth;
             const bool square = channel->program == 0 || channel->mixBoth;
             const bool baseBuzzer = channel->program == 1;
-            if (voice->isNew) {
-                voice->isNew = false;
-                sg->enableEnvelope(index, buzzer);
-                sg->enableTone(index, square);
-                if (buzzer) {
-                    sg->setEnvelopeShape(channel->buzzerWaveform + 8);
-                }
-            }
-            if (buzzer) {
-                if (voice->release && channel->release) {
-                    voice->remove = true;
-                }
-            } else {
-                updateEnvelope(voice, channel);
-                sg->setLevel(index, getLevel(voice, channel));
-            }
+            updateEnvelope(voice, channel);
             if (voice->remove) {
-                sg->setLevel(index, 0);
                 sg->enableEnvelope(index, false);
+                sg->enableTone(index, false);
+                sg->enableNoise(index, false);
+                sg->setLevel(index, 0);
                 auto poolIndex = std::find(voicePool.begin(), voicePool.end(), index);
                 std::rotate(poolIndex, poolIndex + 1, voicePool.end());
                 voices[index] = nullptr;
                 continue;
+            }
+            sg->enableEnvelope(index, buzzer);
+            sg->enableTone(index, square);
+            if (buzzer && voice->buzzerWaveform != channel->buzzerWaveform) {
+                sg->setEnvelopeShape(channel->buzzerWaveform + 8);
+                sg->syncTone(index);
+                voice->buzzerWaveform = channel->buzzerWaveform;
             }
             int tonePeriod;
             int buzzerPeriod;
@@ -169,6 +163,8 @@ namespace AyMidi {
             }
             if (buzzer) {
                 sg->setEnvelopePeriod(buzzerPeriod);
+            } else {
+                sg->setLevel(index, getLevel(voice, channel));
             }
             if (square) {
                 sg->setTonePeriod(index, tonePeriod);

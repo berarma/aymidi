@@ -16,6 +16,7 @@ namespace AyMidi {
         int tonePeriod;
         int syncSquarePeriod;
         double syncSquareCounter;
+        bool syncTone = false;
     };
 
     class SoundGenerator {
@@ -42,6 +43,7 @@ namespace AyMidi {
             void setNoisePeriod(int period);
             void setEnvelopePeriod(int period);
             void setEnvelopeShape(int shape);
+            void syncTone(int index);
             void enableTone(int index, bool enable = true);
             void enableNoise(int index, bool enable = true);
             void enableEnvelope(int index, bool enable = true);

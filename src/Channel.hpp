@@ -7,7 +7,6 @@ namespace AyMidi {
 
     class Voice {
         public:
-            bool isNew;
             bool remove;
             bool release;
             int channelId;
@@ -19,8 +18,8 @@ namespace AyMidi {
             unsigned envelopeCounter;
             unsigned releaseCounter;
             float envelopePitch;
+            int buzzerWaveform;
             Voice(int channelId, int note, int velocity) :
-                isNew(true),
                 remove(false),
                 release(false),
                 channelId(channelId),
@@ -30,7 +29,8 @@ namespace AyMidi {
                 releaseCounter(0),
                 envelopeLevel(0.0f),
                 releaseStartLevel(0.0f),
-                envelopePitch(0.0f)
+                envelopePitch(0.0f),
+                buzzerWaveform(-1)
             { }
     };
 

@@ -72,6 +72,11 @@ namespace AyMidi {
         ayumi_set_mixer(&*ayumi, index, channel.toneOff, channel.noiseOff, channel.envelopeOn);
     }
 
+    void SoundGenerator::syncTone(int index) {
+        auto& channel = channels[index];
+        channel.syncTone = true;
+    }
+
     void SoundGenerator::setLevel(int index, int level) {
         ayumi_set_volume(&*ayumi, index, level);
     }
@@ -86,6 +91,19 @@ namespace AyMidi {
     }
 
     void SoundGenerator::process(float* left, float* right, const uint32_t size) {
+        bool syncTones = false;
+
+        for (int i = 0; i < 3; i++) {
+            if (channels[i].syncTone) {
+                ayumi_set_tone(&*ayumi, i, 0);
+                channels[i].syncTone = false;
+                syncTones = true;
+            }
+        }
+        if (syncTones) {
+            ayumi_process(&*ayumi, true);
+        }
+
         for (int i = 0; i < size; i++) {
             ayumi_process(&*ayumi, false);
             if (removeDc) {
