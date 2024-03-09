@@ -245,7 +245,7 @@ namespace AyMidi {
     }
 
     int SynthEngine::getBuzzerPeriod(const std::shared_ptr<Voice> voice, const std::shared_ptr<Channel> channel) const {
-        return getBuzzerPeriod(voice->note + channel->pitchBend * 12.0);
+        return getBuzzerPeriod(voice->note + voice->envelopePitch + channel->pitchBend * 12.0f);
     }
 
     int SynthEngine::getBuzzerPeriod(const int tonePeriod, const std::shared_ptr<Channel> channel) const {
