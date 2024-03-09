@@ -59,11 +59,6 @@ namespace AyMidi {
         decay = 0;
         sustain = 1.0f;
         release = 0;
-        ringmodDepth = 0.0f;
-        ringmodDetune = 0.0f;
-        ringmodDuty = 0.0f;
-        syncSquarePeriod = 1.0f;
-        syncBuzzerPeriod = 1.0f;
     }
 
     void Channel::cmdResetCC() {

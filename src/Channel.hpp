@@ -57,11 +57,6 @@ namespace AyMidi {
             int decay;
             float sustain;
             int release;
-            float ringmodDepth;
-            float ringmodDetune;
-            float ringmodDuty;
-            float syncSquarePeriod;
-            float syncBuzzerPeriod;
 
             Channel(const int index);
             std::shared_ptr<Voice> cmdNoteOn(const int note, const int velocity);

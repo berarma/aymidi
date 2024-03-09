@@ -87,7 +87,6 @@ namespace AyMidi {
 
     void SoundGenerator::process(float* left, float* right, const uint32_t size) {
         for (int i = 0; i < size; i++) {
-
             ayumi_process(&*ayumi, false);
             if (removeDc) {
                 ayumi_remove_dc(&*ayumi);
