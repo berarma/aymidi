@@ -18,6 +18,7 @@ namespace AyMidi {
             float releaseStartLevel;
             unsigned envelopeCounter;
             unsigned releaseCounter;
+            float envelopePitch;
             Voice(int channelId, int note, int velocity) :
                 isNew(true),
                 remove(false),
@@ -28,7 +29,8 @@ namespace AyMidi {
                 envelopeCounter(0),
                 releaseCounter(0),
                 envelopeLevel(0.0f),
-                releaseStartLevel(0.0f)
+                releaseStartLevel(0.0f),
+                envelopePitch(0.0f)
             { }
     };
 

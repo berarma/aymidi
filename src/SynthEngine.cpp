@@ -136,10 +136,7 @@ namespace AyMidi {
                 sg->enableTone(index, square);
                 if (buzzer) {
                     sg->setEnvelopeShape(channel->buzzerWaveform + 8);
-                } else {
-                    sg->setLevel(index, getLevel(voice, channel));
                 }
-                sg->enableNoise(index, channel->noisePeriod > 0);
             }
             if (buzzer) {
                 if (voice->release && channel->release) {
@@ -181,9 +178,6 @@ namespace AyMidi {
                 sg->setNoisePeriod(channel->noisePeriod);
             }
             sg->setPan(index, channel->pan);
-            if (voice->envelopeCounter < (channel->attack + channel->hold + channel->decay)) {
-                voice->envelopeCounter++;
-            }
         }
     }
 
@@ -243,11 +237,7 @@ namespace AyMidi {
     }
 
     int SynthEngine::getTonePeriod(const std::shared_ptr<Voice> voice, const std::shared_ptr<Channel> channel) const {
-        double note = voice->note;
-        if (channel->attackPitch && voice->envelopeCounter < (channel->attack + channel->hold)) {
-            note += channel->attackPitch;
-        }
-        return getTonePeriod(note + channel->pitchBend * 12.0);
+        return getTonePeriod(voice->note + voice->envelopePitch + channel->pitchBend * 12.0f);
     }
 
     int SynthEngine::getTonePeriod(const int buzzerPeriod, const std::shared_ptr<Channel> channel) const {
@@ -276,27 +266,35 @@ namespace AyMidi {
             return;
         }
 
+        if (voice->envelopeCounter >= (channel->attack + channel->hold + channel->decay)) {
+            if (channel->sustain == 0.0f) {
+                voice->remove = true;
+                return;
+            }
+            voice->envelopeLevel = channel->sustain;
+            return;
+        }
+
         auto counter = voice->envelopeCounter;
-        if (counter < channel->attack) {
+        voice->envelopeCounter++;
+        counter -= channel->attack;
+        if (channel->attackPitch && counter < channel->hold) {
+            voice->envelopePitch = channel->attackPitch;
+        }
+        if (counter < 0) {
             voice->envelopeLevel = (counter + 1.0f) / channel->attack;
             return;
         }
-        counter -= channel->attack;
-        if (counter < channel->hold) {
+        counter -= channel->hold;
+        if (counter < 0) {
             voice->envelopeLevel = 1.0f;
             return;
         }
-        counter -= channel->hold;
+        voice->envelopePitch = 0;
         if (counter < channel->decay) {
             voice->envelopeLevel = 1.0f + (channel->sustain - 1.0f) * ((float)counter / channel->decay);
             return;
         }
-        if (channel->sustain == 0.0f) {
-            voice->remove = true;
-            return;
-        }
-        voice->envelopeCounter = std::numeric_limits<unsigned>::max();
-        voice->envelopeLevel = channel->sustain;
     }
 
     MidiMsgStatus SynthEngine::getMidiMsgStatus(const uint8_t* msg) {
