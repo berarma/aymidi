@@ -240,12 +240,16 @@ namespace AyMidi {
         return buzzerPeriod * (1 << channel->multRatio) - channel->multDetune;
     }
 
+    float SynthEngine::buzzerPeriodMult(const std::shared_ptr<Channel> channel) const {
+        return channel->buzzerWaveform == 2 || channel->buzzerWaveform == 6 ? 0.5f : 1.0f;
+    }
+
     int SynthEngine::getBuzzerPeriod(const std::shared_ptr<Voice> voice, const std::shared_ptr<Channel> channel) const {
-        return getBuzzerPeriod(voice->note + voice->envelopePitch + channel->pitchBend * 12.0f);
+        return getBuzzerPeriod(voice->note + voice->envelopePitch + channel->pitchBend * 12.0f) * buzzerPeriodMult(channel);
     }
 
     int SynthEngine::getBuzzerPeriod(const int tonePeriod, const std::shared_ptr<Channel> channel) const {
-        return std::round(tonePeriod / (float)(1 << channel->multRatio)) - channel->multDetune;
+        return std::round(tonePeriod / (float)(1 << channel->multRatio)) * buzzerPeriodMult(channel) - channel->multDetune;
     }
 
     void SynthEngine::updateEnvelope(std::shared_ptr<Voice> voice, const std::shared_ptr<Channel> channel) {
