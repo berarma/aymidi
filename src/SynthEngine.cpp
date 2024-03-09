@@ -81,6 +81,12 @@ namespace AyMidi {
                     case MIDI_CTL_AY_NOISE_PERIOD:
                         channels[index]->noisePeriod = spreadInt(message[2], 7, 32);
                         break;
+                    case MIDI_CTL_AY_BUZZER_WAVEFORM:
+                        channels[index]->buzzerWaveform = spreadInt(message[2], 7, 8);
+                        break;
+                    case MIDI_CTL_AY_MIX_BOTH:
+                        channels[index]->mixBoth = message[2] >= 64;
+                        break;
                     case MIDI_CTL_AY_BUZ_SQR_RATIO:
                         channels[index]->multRatio = spreadInt(message[2], 7, 8);
                         break;
@@ -121,16 +127,15 @@ namespace AyMidi {
                 continue;
             }
             const auto& channel = channels[voice->channelId];
-            const int waveform = (channel->program - 1) / 3;
-            const bool buzzer = channel->program > 0;
-            const bool square = ((channel->program - 1) % 3) != 0;
-            const bool baseBuzzer = channel->program != 0 && ((channel->program - 1) % 3) < 2;
+            const bool buzzer = channel->program == 1 || channel->mixBoth;
+            const bool square = channel->program == 0 || channel->mixBoth;
+            const bool baseBuzzer = channel->program == 1;
             if (voice->isNew) {
                 voice->isNew = false;
                 sg->enableEnvelope(index, buzzer);
                 sg->enableTone(index, square);
                 if (buzzer) {
-                    sg->setEnvelopeShape(waveform * 2 + 8);
+                    sg->setEnvelopeShape(channel->buzzerWaveform + 8);
                 } else {
                     sg->setLevel(index, getLevel(voice, channel));
                 }

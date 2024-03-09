@@ -43,6 +43,8 @@ namespace AyMidi {
             float modWheel;
             float pan;
             float volume;
+            int buzzerWaveform;
+            bool mixBoth;
             int noisePeriod;
             int multRatio;
             int multDetune;
