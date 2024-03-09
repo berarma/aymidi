@@ -47,11 +47,7 @@ namespace AyMidi {
     }
 
     void SoundGenerator::setEnvelopeShape(int shape) {
-        if (shape == envelopeShape) {
-            return;
-        }
         ayumi_set_envelope_shape(&*ayumi, shape);
-        envelopeShape = shape;
     }
 
     void SoundGenerator::setGain(float gain) {

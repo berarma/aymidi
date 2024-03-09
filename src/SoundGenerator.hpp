@@ -26,7 +26,6 @@ namespace AyMidi {
             double clockStep;
             bool removeDc = false;
             int envelopePeriod;
-            int envelopeShape;
             int syncBuzzerPeriod;
             double syncBuzzerCounter;
             AyChannel channels[3];
