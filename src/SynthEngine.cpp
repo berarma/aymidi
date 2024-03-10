@@ -211,7 +211,7 @@ namespace AyMidi {
     }
 
     int SynthEngine::getLevel(const std::shared_ptr<Voice> voice, const std::shared_ptr<Channel> channel) const {
-        return std::round(voice->envelopeLevel * voice->velocity * channel->volume / 127.0 * 15.0);
+        return (int)(voice->envelopeLevel * voice->velocity * channel->volume / 128.0 * 16.0);
     }
 
     int SynthEngine::freqToTonePeriod(const double freq) const {
