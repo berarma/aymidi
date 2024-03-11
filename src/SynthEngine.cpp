@@ -1,7 +1,5 @@
 #include <algorithm>
 #include <cmath>
-#include <limits>
-#include "DistrhoUtils.hpp"
 #include "SynthEngine.hpp"
 
 namespace AyMidi {
@@ -117,6 +115,8 @@ namespace AyMidi {
                     default:
                         break;
                 }
+            default:
+                break;
         }
     }
 
