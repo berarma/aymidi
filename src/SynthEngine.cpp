@@ -127,9 +127,6 @@ namespace AyMidi {
                 continue;
             }
             const auto& channel = channels[voice->channelId];
-            const bool buzzer = channel->program == 1 || channel->mixBoth;
-            const bool square = channel->program == 0 || channel->mixBoth;
-            const bool baseBuzzer = channel->program == 1;
             updateEnvelope(voice, channel);
             if (voice->remove) {
                 sg->enableEnvelope(index, false);
@@ -141,6 +138,9 @@ namespace AyMidi {
                 voices[index] = nullptr;
                 continue;
             }
+            const bool buzzer = channel->program == 1 || channel->mixBoth;
+            const bool square = channel->program == 0 || channel->mixBoth;
+            const bool baseBuzzer = channel->program == 1;
             sg->enableEnvelope(index, buzzer);
             sg->enableTone(index, square);
             if (buzzer && voice->buzzerWaveform != channel->buzzerWaveform) {
