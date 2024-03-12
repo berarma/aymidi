@@ -13,7 +13,13 @@ namespace AyMidi {
             cmdNoteOff(note, velocity);
             return nullptr;
         }
-        allocatedVoices.erase(std::remove_if(allocatedVoices.begin(), allocatedVoices.end(), [note](std::shared_ptr<Voice> voice) { return voice->note == note; }), allocatedVoices.end());
+        allocatedVoices.erase(std::remove_if(allocatedVoices.begin(), allocatedVoices.end(), [note](std::shared_ptr<Voice> voice) {
+            if (voice->note == note) {
+                voice->remove = true;
+                return true;
+            }
+            return false;
+        }), allocatedVoices.end());
         auto voice = std::make_shared<Voice>(index, note, velocity);
         allocatedVoices.push_back(voice);
         return voice;
