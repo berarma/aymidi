@@ -62,12 +62,13 @@ namespace AyMidi {
 
             Channel(const int index);
             std::shared_ptr<Voice> cmdNoteOn(const int note, const int velocity);
-            std::shared_ptr<Voice> cmdNoteOff(const int note, const int velocity);
-            std::vector<std::shared_ptr<Voice>> getVoices();
+            void cmdNoteOff(const int note, const int velocity);
             void cmdKeyPressure(const int note, const int pressure);
             void cmdAllNotesOff();
             void cmdReset();
             void cmdResetCC();
+            void purge();
+            std::vector<std::shared_ptr<Voice>> getVoices();
     };
 
 }

@@ -10,26 +10,29 @@ namespace AyMidi {
 
     std::shared_ptr<Voice> Channel::cmdNoteOn(const int note, const int velocity) {
         if (velocity == 0) {
-            return cmdNoteOff(note, velocity);
+            cmdNoteOff(note, velocity);
+            return nullptr;
         }
+        allocatedVoices.erase(std::remove_if(allocatedVoices.begin(), allocatedVoices.end(), [note](std::shared_ptr<Voice> voice) { return voice->note == note; }), allocatedVoices.end());
         auto voice = std::make_shared<Voice>(index, note, velocity);
         allocatedVoices.push_back(voice);
         return voice;
     }
 
-    std::shared_ptr<Voice> Channel::cmdNoteOff(const int note, const int velocity) {
-        auto it = std::find_if(allocatedVoices.begin(), allocatedVoices.end(), [note](std::shared_ptr<Voice> voice) { return voice->note == note; });
-        if (it == allocatedVoices.end()) {
-            return nullptr;
-        }
-        std::shared_ptr<Voice> voice = *it;
-        allocatedVoices.erase(it);
-        if (release) {
-            voice->release = true;
-        } else {
-            voice->remove = true;
-        }
-        return voice;
+    void Channel::cmdNoteOff(const int note, const int velocity) {
+        std::for_each(allocatedVoices.begin(), allocatedVoices.end(), [note,release=release](std::shared_ptr<Voice> voice) {
+            if (voice->note == note) {
+                if (release) {
+                    voice->release = true;
+                } else {
+                    voice->remove = true;
+                }
+            }
+        });
+    }
+
+    void Channel::purge() {
+        allocatedVoices.erase(std::remove_if(allocatedVoices.begin(), allocatedVoices.end(), [](std::shared_ptr<Voice> voice) { return voice->remove; }), allocatedVoices.end());
     }
 
     std::vector<std::shared_ptr<Voice>> Channel::getVoices() {

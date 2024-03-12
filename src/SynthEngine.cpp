@@ -181,6 +181,8 @@ namespace AyMidi {
                 updateEnvelope(voice, channel);
             }
 
+            channel->purge();
+
             if (voice->remove) {
                 sg->enableEnvelope(index, false);
                 sg->enableTone(index, false);
