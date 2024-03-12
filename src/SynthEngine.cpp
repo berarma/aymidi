@@ -333,19 +333,19 @@ namespace AyMidi {
 
         auto counter = voice->envelopeCounter;
         voice->envelopeCounter++;
-        counter -= channel->attack;
-        if (channel->attackPitch && counter < channel->hold) {
+        if (channel->attackPitch && counter < (channel->attack + channel->hold)) {
             voice->envelopePitch = channel->attackPitch;
         }
-        if (counter < 0) {
-            voice->envelopeLevel = (counter + 1.0f) / channel->attack;
+        if (counter < channel->attack) {
+            voice->envelopeLevel = (float)counter / channel->attack;
             return;
         }
-        counter -= channel->hold;
-        if (counter < 0) {
+        counter -= channel->attack;
+        if (counter < channel->hold) {
             voice->envelopeLevel = 1.0f;
             return;
         }
+        counter -= channel->hold;
         voice->envelopePitch = 0;
         if (counter < channel->decay) {
             voice->envelopeLevel = 1.0f + (channel->sustain - 1.0f) * ((float)counter / channel->decay);
