@@ -57,6 +57,7 @@ namespace AyMidi {
     void SoundGenerator::enableTone(int index, bool enable) {
         auto& channel = channels[index];
         channel.toneOff = !enable;
+        channel.syncTone = false;
         ayumi_set_mixer(&*ayumi, index, channel.toneOff, channel.noiseOff, channel.envelopeOn);
     }
 
@@ -94,14 +95,19 @@ namespace AyMidi {
         bool syncTones = false;
 
         for (int i = 0; i < 3; i++) {
-            if (channels[i].syncTone) {
+            if (!channels[i].toneOff && channels[i].syncTone) {
                 ayumi_set_tone(&*ayumi, i, 0);
-                channels[i].syncTone = false;
                 syncTones = true;
             }
         }
         if (syncTones) {
             ayumi_process(&*ayumi, true);
+            for (int i = 0; i < 3; i++) {
+                if (!channels[i].toneOff && channels[i].syncTone) {
+                    ayumi_set_tone(&*ayumi, i, channels[i].tonePeriod);
+                    channels[i].syncTone = false;
+                }
+            }
         }
 
         for (int i = 0; i < size; i++) {

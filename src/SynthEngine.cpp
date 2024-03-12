@@ -201,8 +201,8 @@ namespace AyMidi {
             sg->enableTone(index, square);
             if (buzzer && voice->buzzerWaveform != channel->buzzerWaveform) {
                 sg->setEnvelopeShape(channel->buzzerWaveform + 8);
-                sg->syncTone(index);
                 voice->buzzerWaveform = channel->buzzerWaveform;
+                sg->syncTone(index);
             }
             int tonePeriod;
             int buzzerPeriod;
