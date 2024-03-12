@@ -110,7 +110,7 @@ namespace AyMidi {
                         channels[index]->multDetune = signedFloat(message[2], 7) * 63;
                         break;
                     case MIDI_CTL_AY_ATTACK_PITCH:
-                        channels[index]->attackPitch = signedFloat(message[2], 7) * 12;
+                        channels[index]->attackPitch = message[2] - 64;
                         break;
                     case MIDI_CTL_AY_ATTACK:
                         channels[index]->attack = message[2];
@@ -271,11 +271,11 @@ namespace AyMidi {
     }
 
     int SynthEngine::freqToTonePeriod(const double freq) const {
-        return std::round(sg->clockRate / 16.0 / freq);
+        return std::min((int)std::round(sg->clockRate / 16.0 / freq), 0x0FFF);
     }
 
     int SynthEngine::freqToBuzzerPeriod(const double freq) const {
-        return std::round(sg->clockRate / 256.0 / freq);
+        return std::min((int)std::round(sg->clockRate / 256.0 / freq), 0xFFFF);
     }
 
     int SynthEngine::getTonePeriod(const double note) const {
@@ -309,6 +309,7 @@ namespace AyMidi {
     }
 
     void SynthEngine::updateEnvelope(std::shared_ptr<Voice> voice, const std::shared_ptr<Channel> channel) {
+        voice->envelopePitch = 0.0f;
         if (voice->release && channel->release) {
             if (voice->releaseCounter == 0) {
                 voice->releaseStartLevel = voice->envelopeLevel;
@@ -334,7 +335,7 @@ namespace AyMidi {
         auto counter = voice->envelopeCounter;
         voice->envelopeCounter++;
         if (channel->attackPitch && counter < (channel->attack + channel->hold)) {
-            voice->envelopePitch = channel->attackPitch;
+            voice->envelopePitch = channel->attackPitch * (1.0f - ((float)counter / (channel->attack + channel->hold)));
         }
         if (counter < channel->attack) {
             voice->envelopeLevel = (float)counter / channel->attack;
@@ -346,7 +347,6 @@ namespace AyMidi {
             return;
         }
         counter -= channel->hold;
-        voice->envelopePitch = 0;
         if (counter < channel->decay) {
             voice->envelopeLevel = 1.0f + (channel->sustain - 1.0f) * ((float)counter / channel->decay);
             return;
