@@ -128,7 +128,7 @@ namespace AyMidi {
                         channels[index]->release = message[2];
                         break;
                     case MIDI_CTL_AY_ARPEGGIO_SPEED:
-                        channels[index]->arpeggioSpeed = message[2] - 64 + (message[2] == 64);
+                        channels[index]->arpeggioSpeed = spreadInt(message[2], 7, 32) - 16 + (message[2] >= 64);
                         break;
                     default:
                         break;
