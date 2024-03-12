@@ -32,6 +32,12 @@ namespace AyMidi {
         return voice;
     }
 
+    std::vector<std::shared_ptr<Voice>> Channel::getVoices() {
+        std::sort(allocatedVoices.begin(), allocatedVoices.end(), [arpeggioSpeed = arpeggioSpeed](std::shared_ptr<Voice> a, std::shared_ptr<Voice> b) { return arpeggioSpeed > 0 ? a->note < b->note : a->note > b->note; });
+
+        return allocatedVoices;
+    }
+
     void Channel::cmdKeyPressure(const int note, const int pressure) {
         auto it = std::find_if(allocatedVoices.begin(), allocatedVoices.end(), [note](std::shared_ptr<Voice> voice) { return voice->note == note; });
         (*it)->pressure = pressure;

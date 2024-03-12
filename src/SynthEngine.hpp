@@ -125,6 +125,7 @@ namespace AyMidi {
             std::vector<int> voicePool;
             unsigned updatePeriod;
             unsigned updateCounter;
+            bool harpMode;
 
             int getLevel(const std::shared_ptr<Voice> voice, const std::shared_ptr<Channel> channel) const;
             int freqToTonePeriod(const double freq) const;
@@ -158,6 +159,7 @@ namespace AyMidi {
             void setSustain(const int index, const float sustain);
             void setRelease(const int index, const int release);
             void setUpdateRate(int rate);
+            void setHarpMode(bool enable);
     };
 
 }

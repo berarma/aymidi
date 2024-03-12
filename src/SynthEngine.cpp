@@ -21,6 +21,14 @@ namespace AyMidi {
         updateCounter = 0;
     }
 
+    void SynthEngine::setHarpMode(bool enable) {
+        harpMode = enable;
+        for (int i = 0; i < 16; i++) {
+            channels[i]->cmdAllNotesOff();
+        }
+        synch();
+    }
+
     void SynthEngine::midiSend(const uint8_t* message) {
         const uint8_t status = message[0];
         const int index = status & 0xF;
@@ -34,12 +42,22 @@ namespace AyMidi {
             case MIDI_MSG_NOTE_ON:
                 {
                     auto voice = channel->cmdNoteOn(message[1], message[2]);
-                    auto slotIndex = voicePool.back();
-                    if (voices[slotIndex] != nullptr) {
-                        channel->cmdNoteOff(voices[slotIndex]->note, 0);
+                    if (voice == nullptr) {
+                        break;
                     }
-                    voices[slotIndex] = voice;
-                    std::rotate(voicePool.begin(), voicePool.end() - 1, voicePool.end());
+                    if (harpMode) {
+                        auto slotIndex = channel->index & 3;
+                        if (voices[slotIndex] == nullptr) {
+                            voices[slotIndex] = voice;
+                        }
+                    } else {
+                        auto slotIndex = voicePool.back();
+                        if (voices[slotIndex] != nullptr) {
+                            channel->cmdNoteOff(voices[slotIndex]->note, 0);
+                        }
+                        voices[slotIndex] = voice;
+                        std::rotate(voicePool.begin(), voicePool.end() - 1, voicePool.end());
+                    }
                 }
                 break;
             case MIDI_MSG_KEY_PRESSURE:
@@ -110,7 +128,7 @@ namespace AyMidi {
                         channels[index]->release = message[2];
                         break;
                     case MIDI_CTL_AY_ARPEGGIO_SPEED:
-                        channels[index]->arpeggioSpeed = signedFloat(message[2], 7) * 63;
+                        channels[index]->arpeggioSpeed = message[2] - 64 + (message[2] == 64);
                         break;
                     default:
                         break;
@@ -122,12 +140,47 @@ namespace AyMidi {
 
     void SynthEngine::synch() {
         for (int index = 0; index < 3; index++) {
-            const auto& voice = voices[index];
+            auto voice = voices[index];
             if (voice == nullptr) {
                 continue;
             }
-            const auto& channel = channels[voice->channelId];
-            updateEnvelope(voice, channel);
+            const auto channel = channels[voice->channelId];
+            if (harpMode) {
+                auto cVoices = channel->getVoices();
+                std::shared_ptr<Voice> firstVoice = nullptr;
+                std::shared_ptr<Voice> nextVoice = nullptr;
+                for (auto aVoice : cVoices) {
+                    if (!aVoice->remove) {
+                        updateEnvelope(aVoice, channel);
+                    }
+                    if (aVoice->remove) {
+                        continue;
+                    }
+                    if (aVoice->note != voice->note) {
+                        if (firstVoice == nullptr) {
+                            firstVoice = aVoice;
+                            nextVoice = aVoice;
+                        } else if (nextVoice == nullptr) {
+                            nextVoice = aVoice;
+                        }
+                    } else {
+                        nextVoice = nullptr;
+                    }
+                }
+                voice->arpeggioCounter++;
+                if (voice->remove || voice->arpeggioCounter >= abs(channel->arpeggioSpeed)) {
+                    voice->arpeggioCounter = 0;
+                    if (nextVoice != nullptr) {
+                        voice = nextVoice;
+                    } else if (firstVoice != nullptr) {
+                        voice = firstVoice;
+                    }
+                }
+                voices[index] = voice;
+            } else {
+                updateEnvelope(voice, channel);
+            }
+
             if (voice->remove) {
                 sg->enableEnvelope(index, false);
                 sg->enableTone(index, false);
@@ -138,6 +191,7 @@ namespace AyMidi {
                 voices[index] = nullptr;
                 continue;
             }
+
             const bool buzzer = channel->program == 1 || channel->mixBoth;
             const bool square = channel->program == 0 || channel->mixBoth;
             const bool baseBuzzer = channel->program == 1;
