@@ -19,7 +19,6 @@ class AyMidiPlugin : public Plugin {
         EMUL,
         UPDATERATE,
         BASICCHANNEL,
-        HARPMODE,
         NUM_PARAMETERS
     };
 
@@ -139,14 +138,6 @@ class AyMidiPlugin : public Plugin {
                     parameter.ranges.max = 16;
                     parameter.ranges.def = 1;
                     break;
-                case HARPMODE:
-                    parameter.hints     |= kParameterIsBoolean;
-                    parameter.name       = "Harp Mode";
-                    parameter.symbol     = "Harp";
-                    parameter.ranges.min = 0;
-                    parameter.ranges.max = 1;
-                    parameter.ranges.def = 0;
-                    break;
             }
         }
 
@@ -169,8 +160,6 @@ class AyMidiPlugin : public Plugin {
                     return pUpdateRate;
                 case BASICCHANNEL:
                     return pBasicChannel;
-                case HARPMODE:
-                    return pHarpMode;
             }
 
             return 0.0f;
@@ -201,10 +190,6 @@ class AyMidiPlugin : public Plugin {
                 case BASICCHANNEL:
                     pBasicChannel = value;
                     synthEngine->setBasicChannel((int)pBasicChannel - 1);
-                    break;
-                case HARPMODE:
-                    pHarpMode = value;
-                    synthEngine->setHarpMode((bool)pHarpMode);
                     break;
             }
         }
@@ -247,7 +232,6 @@ class AyMidiPlugin : public Plugin {
         float pClockRate;
         float pEmul;
         float pUpdateRate;
-        float pHarpMode;
         float pBasicChannel;
 
         DISTRHO_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(AyMidiPlugin)

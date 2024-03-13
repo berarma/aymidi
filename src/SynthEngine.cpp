@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <cmath>
 #include "SynthEngine.hpp"
+#include "DistrhoUtils.hpp"
 
 namespace AyMidi {
 
@@ -17,26 +18,18 @@ namespace AyMidi {
         lastChannel = 0;
         omniMode = true;
         polyMode = true;
-        harpMode = 0;
 
         setUpdateRate(50);
     }
 
     void SynthEngine::setUpdateRate(int rate) {
+        updateRate = rate;
         updatePeriod = std::round((float)sg->sampleRate / rate);
         updateCounter = 0;
     }
 
     void SynthEngine::setBasicChannel(int nChannel) {
         basicChannel = nChannel;
-    }
-
-    void SynthEngine::setHarpMode(bool enable) {
-        harpMode = enable;
-        for (int i = 0; i < 16; i++) {
-            channels[i]->cmdAllNotesOff();
-        }
-        synch();
     }
 
     void SynthEngine::allNotesOff() {
@@ -179,7 +172,13 @@ namespace AyMidi {
                         channels[index]->release = message[2];
                         break;
                     case MIDI_CTL_AY_ARPEGGIO_SPEED:
-                        channels[index]->arpeggioSpeed = spreadInt(message[2], 7, 32) - 16 + (message[2] >= 64);
+                        {
+                            int period = (64 - spreadInt(message[2], 7, 64)) - (message[2] < 64 ? 65 : 0);
+                            if (period == 32) {
+                                period = 0;
+                            }
+                            channels[index]->arpeggioPeriod = std::round((float)period * updateRate / 100.0f);
+                        }
                         break;
                     default:
                         break;
@@ -196,7 +195,7 @@ namespace AyMidi {
                 continue;
             }
             const auto channel = channels[voice->channelId];
-            if (!polyMode && harpMode) {
+            if (!polyMode && channel->arpeggioPeriod != 0) {
                 auto cVoices = channel->getVoices();
                 std::shared_ptr<Voice> firstVoice = nullptr;
                 std::shared_ptr<Voice> nextVoice = nullptr;
@@ -219,7 +218,7 @@ namespace AyMidi {
                     }
                 }
                 voice->arpeggioCounter++;
-                if (voice->remove || voice->arpeggioCounter >= abs(channel->arpeggioSpeed)) {
+                if (voice->remove || voice->arpeggioCounter >= abs(channel->arpeggioPeriod)) {
                     voice->arpeggioCounter = 0;
                     if (nextVoice != nullptr) {
                         voice = nextVoice;

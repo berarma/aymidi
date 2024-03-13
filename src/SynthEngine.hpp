@@ -123,13 +123,13 @@ namespace AyMidi {
             std::shared_ptr<Channel> channels[16];
             std::shared_ptr<Voice> voices[3];
             std::vector<int> voicePool;
-            unsigned updatePeriod;
-            unsigned updateCounter;
+            int updateRate;
+            int updatePeriod;
+            int updateCounter;
             int basicChannel;
             int lastChannel;
             bool omniMode;
             bool polyMode;
-            bool harpMode;
 
             int getLevel(const std::shared_ptr<Voice> voice, const std::shared_ptr<Channel> channel) const;
             int freqToTonePeriod(const double freq) const;

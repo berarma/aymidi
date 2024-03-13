@@ -52,7 +52,7 @@ namespace AyMidi {
             int noisePeriod;
             int multRatio;
             int multDetune;
-            int arpeggioSpeed;
+            int arpeggioPeriod;
             float attackPitch;
             int attack;
             int hold;

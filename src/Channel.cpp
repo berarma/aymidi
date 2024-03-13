@@ -42,8 +42,9 @@ namespace AyMidi {
     }
 
     std::vector<std::shared_ptr<Voice>> Channel::getVoices() {
-        std::sort(allocatedVoices.begin(), allocatedVoices.end(), [arpeggioSpeed = arpeggioSpeed](std::shared_ptr<Voice> a, std::shared_ptr<Voice> b) { return arpeggioSpeed > 0 ? a->note < b->note : a->note > b->note; });
-
+        if (arpeggioPeriod != 0) {
+            std::sort(allocatedVoices.begin(), allocatedVoices.end(), [arpeggioPeriod = arpeggioPeriod](std::shared_ptr<Voice> a, std::shared_ptr<Voice> b) { return arpeggioPeriod > 0 ? a->note < b->note : a->note > b->note; });
+        }
         return allocatedVoices;
     }
 
@@ -73,7 +74,7 @@ namespace AyMidi {
         noisePeriod = 0;
         multRatio = 4;
         multDetune = 0;
-        arpeggioSpeed = 0;
+        arpeggioPeriod = 0;
         attackPitch = 0;
         attack = 0;
         hold = 0;
