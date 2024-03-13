@@ -64,6 +64,7 @@ namespace AyMidi {
             std::shared_ptr<Voice> cmdNoteOn(const int note, const int velocity);
             void cmdNoteOff(const int note, const int velocity);
             void cmdKeyPressure(const int note, const int pressure);
+            void cmdAllSoundsOff();
             void cmdAllNotesOff();
             void cmdReset();
             void cmdResetCC();

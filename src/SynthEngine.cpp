@@ -13,12 +13,22 @@ namespace AyMidi {
             voicePool.push_back(i);
         }
 
+        basicChannel = 0;
+        lastChannel = 0;
+        omniMode = true;
+        polyMode = true;
+        harpMode = 0;
+
         setUpdateRate(50);
     }
 
     void SynthEngine::setUpdateRate(int rate) {
         updatePeriod = std::round((float)sg->sampleRate / rate);
         updateCounter = 0;
+    }
+
+    void SynthEngine::setBasicChannel(int nChannel) {
+        basicChannel = nChannel;
     }
 
     void SynthEngine::setHarpMode(bool enable) {
@@ -29,9 +39,39 @@ namespace AyMidi {
         synch();
     }
 
+    void SynthEngine::allNotesOff() {
+        for (int i = 0; i < 16; i++) {
+            channels[i]->cmdAllNotesOff();
+        }
+    }
+
+    void SynthEngine::noteOn(Channel* channel, int note, int velocity) {
+        auto voice = channel->cmdNoteOn(note, velocity);
+        if (voice == nullptr) {
+            return;
+        }
+        if (polyMode) {
+            auto slotIndex = voicePool.back();
+            if (voices[slotIndex] != nullptr) {
+                channel->cmdNoteOff(voices[slotIndex]->note, 0);
+            }
+            voices[slotIndex] = voice;
+            std::rotate(voicePool.begin(), voicePool.end() - 1, voicePool.end());
+        } else {
+            auto slotIndex = channel->index & 3;
+            voices[slotIndex] = voice;
+        }
+    }
+
     void SynthEngine::midiSend(const uint8_t* message) {
         const uint8_t status = message[0];
         const int index = status & 0xF;
+
+        if (!omniMode) {
+            if (index < basicChannel || index > lastChannel) {
+                return;
+            }
+        }
 
         Channel* channel = &*channels[index];
 
@@ -40,25 +80,7 @@ namespace AyMidi {
                 channel->cmdNoteOff(message[1], message[2]);
                 break;
             case MIDI_MSG_NOTE_ON:
-                {
-                    auto voice = channel->cmdNoteOn(message[1], message[2]);
-                    if (voice == nullptr) {
-                        break;
-                    }
-                    if (harpMode) {
-                        auto slotIndex = channel->index & 3;
-                        if (voices[slotIndex] == nullptr) {
-                            voices[slotIndex] = voice;
-                        }
-                    } else {
-                        auto slotIndex = voicePool.back();
-                        if (voices[slotIndex] != nullptr) {
-                            channel->cmdNoteOff(voices[slotIndex]->note, 0);
-                        }
-                        voices[slotIndex] = voice;
-                        std::rotate(voicePool.begin(), voicePool.end() - 1, voicePool.end());
-                    }
-                }
+                noteOn(channel, message[1], message[2]);
                 break;
             case MIDI_MSG_KEY_PRESSURE:
                 channel->cmdKeyPressure(message[1], message[2]);
@@ -76,13 +98,42 @@ namespace AyMidi {
                 channel->cmdReset();
                 break;
             case MIDI_MSG_CONTROL:
+                if (index != basicChannel && message[1] >= MIDI_CTL_ALL_SOUNDS_OFF) {
+                    return;
+                }
                 switch (message[1]) {
                     case MIDI_CTL_RESET_CONTROLLERS:
                         channel->cmdResetCC();
                         break;
                     case MIDI_CTL_ALL_SOUNDS_OFF:
+                        for (int i = 0; i < 16; i++) {
+                            channels[i]->cmdAllSoundsOff();
+                        }
+                        break;
                     case MIDI_CTL_ALL_NOTES_OFF:
-                        channel->cmdAllNotesOff();
+                        allNotesOff();
+                        break;
+                    case MIDI_CTL_OMNI_MODE_ON:
+                        omniMode = true;
+                        allNotesOff();
+                        break;
+                    case MIDI_CTL_OMNI_MODE_OFF:
+                        omniMode = false;
+                        allNotesOff();
+                        break;
+                    case MIDI_CTL_POLY_MODE_ON:
+                        polyMode = true;
+                        lastChannel = basicChannel;
+                        allNotesOff();
+                        break;
+                    case MIDI_CTL_MONO_MODE_ON:
+                        polyMode = false;
+                        if (message[2] == 0) {
+                            lastChannel = std::min(basicChannel + 2, 15);
+                        } else {
+                            lastChannel = std::min(basicChannel + message[2] - 1, 15);
+                        }
+                        allNotesOff();
                         break;
                     case MIDI_CTL_MSB_MODWHEEL:
                         channel->modWheel = signedFloat(message[2], 7);
@@ -145,7 +196,7 @@ namespace AyMidi {
                 continue;
             }
             const auto channel = channels[voice->channelId];
-            if (harpMode) {
+            if (!polyMode && harpMode) {
                 auto cVoices = channel->getVoices();
                 std::shared_ptr<Voice> firstVoice = nullptr;
                 std::shared_ptr<Voice> nextVoice = nullptr;
@@ -310,13 +361,13 @@ namespace AyMidi {
 
     void SynthEngine::updateEnvelope(std::shared_ptr<Voice> voice, const std::shared_ptr<Channel> channel) {
         voice->envelopePitch = 0.0f;
-        if (voice->release && channel->release) {
-            if (voice->releaseCounter == 0) {
-                voice->releaseStartLevel = voice->envelopeLevel;
-            }
+        if (voice->release) {
             if (voice->releaseCounter >= channel->release) {
                 voice->remove = true;
             } else {
+                if (voice->releaseCounter == 0) {
+                    voice->releaseStartLevel = voice->envelopeLevel;
+                }
                 voice->envelopeLevel = voice->releaseStartLevel * (1.0f - (float)voice->releaseCounter / channel->release);
                 voice->releaseCounter++;
             }

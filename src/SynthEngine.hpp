@@ -125,6 +125,10 @@ namespace AyMidi {
             std::vector<int> voicePool;
             unsigned updatePeriod;
             unsigned updateCounter;
+            int basicChannel;
+            int lastChannel;
+            bool omniMode;
+            bool polyMode;
             bool harpMode;
 
             int getLevel(const std::shared_ptr<Voice> voice, const std::shared_ptr<Channel> channel) const;
@@ -143,6 +147,8 @@ namespace AyMidi {
             float signedFloat(int value, int bits) const;
             void synch();
             MidiMsgStatus getMidiMsgStatus(const uint8_t* msg);
+            void allNotesOff();
+            void noteOn(Channel* channel, int note, int velocity);
 
         public:
             SynthEngine(std::shared_ptr<SoundGenerator> sg);
@@ -159,6 +165,9 @@ namespace AyMidi {
             void setSustain(const int index, const float sustain);
             void setRelease(const int index, const int release);
             void setUpdateRate(int rate);
+            void setBasicChannel(int nChannel);
+            void setOmniMode(bool enable);
+            void setPolyMode(bool enable);
             void setHarpMode(bool enable);
     };
 

@@ -52,9 +52,15 @@ namespace AyMidi {
         (*it)->pressure = pressure;
     }
 
-    void Channel::cmdAllNotesOff() {
+    void Channel::cmdAllSoundsOff() {
         for (auto& voice : allocatedVoices) {
             voice->remove = true;
+        }
+    }
+
+    void Channel::cmdAllNotesOff() {
+        for (auto& voice : allocatedVoices) {
+            voice->release = true;
         }
     }
 
