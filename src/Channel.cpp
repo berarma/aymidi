@@ -8,6 +8,14 @@ namespace AyMidi {
         cmdReset();
     }
 
+    void Channel::setProgram(int newProgram) {
+        if (newProgram < 5 && newProgram != program) {
+            program = newProgram;
+            buzzerWaveform = 4 + 2 * (program / 3);
+            programChange = true;
+        }
+    }
+
     std::shared_ptr<Voice> Channel::cmdNoteOn(const int note, const int velocity) {
         if (velocity == 0) {
             cmdNoteOff(note, velocity);
@@ -68,7 +76,7 @@ namespace AyMidi {
     void Channel::cmdReset() {
         cmdAllNotesOff();
         cmdResetCC();
-        program = 0;
+        setProgram(0);
         volume = 100.0f / 127.0f;
         pan = 0.5f;
         noisePeriod = 0;
@@ -81,7 +89,6 @@ namespace AyMidi {
         decay = 0;
         sustain = 1.0f;
         release = 0;
-        buzzerWaveform = 0;
     }
 
     void Channel::cmdResetCC() {

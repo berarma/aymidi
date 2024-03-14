@@ -18,7 +18,6 @@ namespace AyMidi {
             unsigned envelopeCounter;
             unsigned releaseCounter;
             float envelopePitch;
-            int buzzerWaveform;
             int arpeggioCounter;
             Voice(int channelId, int note, int velocity) :
                 remove(false),
@@ -31,7 +30,6 @@ namespace AyMidi {
                 envelopeLevel(0.0f),
                 releaseStartLevel(0.0f),
                 envelopePitch(0.0f),
-                buzzerWaveform(-1),
                 arpeggioCounter(0)
             { }
     };
@@ -42,6 +40,7 @@ namespace AyMidi {
         public:
             int index;
             int program;
+            bool programChange;
             float pressure;
             float pitchBend;
             float modWheel;
@@ -60,6 +59,7 @@ namespace AyMidi {
             int release;
 
             Channel(const int index);
+            void setProgram(int newProgram);
             std::shared_ptr<Voice> cmdNoteOn(const int note, const int velocity);
             void cmdNoteOff(const int note, const int velocity);
             void cmdKeyPressure(const int note, const int pressure);

@@ -85,10 +85,7 @@ namespace AyMidi {
                 channel->pitchBend = signedFloat(message[1] + (message[2] << 7), 14);
                 break;
             case MIDI_MSG_PGM_CHANGE:
-                if (message[1] < 5) {
-                    channel->program = message[1];
-                    channel->buzzerWaveform = 4 + 2 * (channel->program / 3);
-                }
+                channel->setProgram(message[2]);
                 break;
             case MIDI_MSG_RESET:
                 channel->cmdReset();
@@ -145,10 +142,10 @@ namespace AyMidi {
                         channels[index]->noisePeriod = spreadInt(message[2], 7, 32);
                         break;
                     case MIDI_CTL_AY_BUZZER_DETUNE:
-                        channels[index]->buzzerDetune = message[2] / 20.0f;
+                        channels[index]->buzzerDetune = (message[2] - 64) / 4.0f;
                         break;
                     case MIDI_CTL_AY_SQUARE_DETUNE:
-                        channels[index]->squareDetune = message[2] / 4.0f;
+                        channels[index]->squareDetune = (message[2] - 64) / 4.0f;
                         break;
                     case MIDI_CTL_AY_ATTACK_PITCH:
                         channels[index]->attackPitch = message[2] - 64;
@@ -243,23 +240,18 @@ namespace AyMidi {
 
             const bool buzzer = channel->program > 0;
             const bool square = channel->program % 2 == 0;
-            sg->enableEnvelope(index, buzzer);
-            sg->enableTone(index, square);
-            if (buzzer && voice->buzzerWaveform != channel->buzzerWaveform) {
+            if (channel->programChange) {
+                channel->programChange = false;
+                sg->enableEnvelope(index, buzzer);
+                sg->enableTone(index, square);
                 sg->setEnvelopeShape(channel->buzzerWaveform + 8);
-                voice->buzzerWaveform = channel->buzzerWaveform;
-                sg->syncTone(index);
             }
-            int tonePeriod;
-            int buzzerPeriod;
             if (buzzer) {
-                buzzerPeriod = getBuzzerPeriod(voice, channel);
-                sg->setEnvelopePeriod(buzzerPeriod);
+                sg->setEnvelopePeriod(getBuzzerPeriod(voice, channel));
             }
             if (square) {
-                tonePeriod = getSquarePeriod(voice, channel);
                 sg->setLevel(index, getLevel(voice, channel));
-                sg->setTonePeriod(index, tonePeriod);
+                sg->setTonePeriod(index, getSquarePeriod(voice, channel));
             }
             sg->enableNoise(index, channel->noisePeriod > 0);
             if (channel->noisePeriod > 0) {
@@ -303,15 +295,15 @@ namespace AyMidi {
     }
 
     int SynthEngine::getLevel(const std::shared_ptr<Voice> voice, const std::shared_ptr<Channel> channel) const {
-        return (int)(voice->envelopeLevel * voice->velocity * channel->volume / 128.0 * 16.0);
+        return (int)(voice->envelopeLevel * voice->velocity * channel->volume / 128.0f * 16.0f);
     }
 
     int SynthEngine::freqToSquarePeriod(const double freq) const {
-        return std::min((int)std::round(sg->clockRate / 16.0 / freq), 0x0FFF);
+        return std::min((int)std::round(sg->clockRate / 16.0f / freq), 0x0FFF);
     }
 
     int SynthEngine::freqToBuzzerPeriod(const double freq) const {
-        return std::min((int)std::round(sg->clockRate / 256.0 / freq), 0xFFFF);
+        return std::min((int)std::round(sg->clockRate / 256.0f / freq), 0xFFFF);
     }
 
     float SynthEngine::getNoteFreq(const double note) const {
