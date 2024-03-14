@@ -85,7 +85,10 @@ namespace AyMidi {
                 channel->pitchBend = signedFloat(message[1] + (message[2] << 7), 14);
                 break;
             case MIDI_MSG_PGM_CHANGE:
-                channel->program = std::min<uint8_t>(39, message[1]);
+                if (message[1] < 5) {
+                    channel->program = message[1];
+                    channel->buzzerWaveform = 4 + 2 * (channel->program / 3);
+                }
                 break;
             case MIDI_MSG_RESET:
                 channel->cmdReset();
@@ -141,17 +144,11 @@ namespace AyMidi {
                     case MIDI_CTL_AY_NOISE_PERIOD:
                         channels[index]->noisePeriod = spreadInt(message[2], 7, 32);
                         break;
-                    case MIDI_CTL_AY_BUZZER_WAVEFORM:
-                        channels[index]->buzzerWaveform = spreadInt(message[2], 7, 8);
+                    case MIDI_CTL_AY_BUZZER_DETUNE:
+                        channels[index]->buzzerDetune = message[2] / 20.0f;
                         break;
-                    case MIDI_CTL_AY_MIX_BOTH:
-                        channels[index]->mixBoth = message[2] >= 64;
-                        break;
-                    case MIDI_CTL_AY_BUZ_SQR_RATIO:
-                        channels[index]->multRatio = spreadInt(message[2], 7, 8);
-                        break;
-                    case MIDI_CTL_AY_BUZ_SQR_DETUNE:
-                        channels[index]->multDetune = signedFloat(message[2], 7) * 63;
+                    case MIDI_CTL_AY_SQUARE_DETUNE:
+                        channels[index]->squareDetune = message[2] / 4.0f;
                         break;
                     case MIDI_CTL_AY_ATTACK_PITCH:
                         channels[index]->attackPitch = message[2] - 64;
@@ -244,9 +241,8 @@ namespace AyMidi {
                 continue;
             }
 
-            const bool buzzer = channel->program == 1 || channel->mixBoth;
-            const bool square = channel->program == 0 || channel->mixBoth;
-            const bool baseBuzzer = channel->program == 1;
+            const bool buzzer = channel->program > 0;
+            const bool square = channel->program % 2 == 0;
             sg->enableEnvelope(index, buzzer);
             sg->enableTone(index, square);
             if (buzzer && voice->buzzerWaveform != channel->buzzerWaveform) {
@@ -256,23 +252,13 @@ namespace AyMidi {
             }
             int tonePeriod;
             int buzzerPeriod;
-            if (buzzer && baseBuzzer) {
-                buzzerPeriod = getBuzzerPeriod(voice, channel);
-                if (square) {
-                    tonePeriod = getTonePeriod(buzzerPeriod, channel);
-                }
-            } else if (square && !baseBuzzer) {
-                tonePeriod = getTonePeriod(voice, channel);
-                if (buzzer) {
-                    buzzerPeriod = getBuzzerPeriod(tonePeriod, channel);
-                }
-            }
             if (buzzer) {
+                buzzerPeriod = getBuzzerPeriod(voice, channel);
                 sg->setEnvelopePeriod(buzzerPeriod);
-            } else {
-                sg->setLevel(index, getLevel(voice, channel));
             }
             if (square) {
+                tonePeriod = getSquarePeriod(voice, channel);
+                sg->setLevel(index, getLevel(voice, channel));
                 sg->setTonePeriod(index, tonePeriod);
             }
             sg->enableNoise(index, channel->noisePeriod > 0);
@@ -320,7 +306,7 @@ namespace AyMidi {
         return (int)(voice->envelopeLevel * voice->velocity * channel->volume / 128.0 * 16.0);
     }
 
-    int SynthEngine::freqToTonePeriod(const double freq) const {
+    int SynthEngine::freqToSquarePeriod(const double freq) const {
         return std::min((int)std::round(sg->clockRate / 16.0 / freq), 0x0FFF);
     }
 
@@ -328,34 +314,19 @@ namespace AyMidi {
         return std::min((int)std::round(sg->clockRate / 256.0 / freq), 0xFFFF);
     }
 
-    int SynthEngine::getTonePeriod(const double note) const {
-        double freq = 440.0 * pow(2, (note - 69) / 12.0);
-        return freqToTonePeriod(freq);
+    float SynthEngine::getNoteFreq(const double note) const {
+        return 440.0f * pow(2, (note - 69) / 12.0f);
     }
 
-    int SynthEngine::getBuzzerPeriod(const double note) const {
-        double freq = 440.0 * pow(2, (note - 69) / 12.0);
-        return freqToBuzzerPeriod(freq);
-    }
-
-    int SynthEngine::getTonePeriod(const std::shared_ptr<Voice> voice, const std::shared_ptr<Channel> channel) const {
-        return getTonePeriod(voice->note + voice->envelopePitch + channel->pitchBend * 12.0f);
-    }
-
-    int SynthEngine::getTonePeriod(const int buzzerPeriod, const std::shared_ptr<Channel> channel) const {
-        return buzzerPeriod * (1 << channel->multRatio) - channel->multDetune;
-    }
-
-    float SynthEngine::buzzerPeriodMult(const std::shared_ptr<Channel> channel) const {
-        return channel->buzzerWaveform == 2 || channel->buzzerWaveform == 6 ? 0.5f : 1.0f;
+    int SynthEngine::getSquarePeriod(const std::shared_ptr<Voice> voice, const std::shared_ptr<Channel> channel) const {
+        float freq = getNoteFreq(voice->note + voice->envelopePitch + channel->squareDetune + channel->pitchBend * 12.0f);
+        return freqToSquarePeriod(freq);
     }
 
     int SynthEngine::getBuzzerPeriod(const std::shared_ptr<Voice> voice, const std::shared_ptr<Channel> channel) const {
-        return getBuzzerPeriod(voice->note + voice->envelopePitch + channel->pitchBend * 12.0f) * buzzerPeriodMult(channel);
-    }
-
-    int SynthEngine::getBuzzerPeriod(const int tonePeriod, const std::shared_ptr<Channel> channel) const {
-        return std::round(tonePeriod / (float)(1 << channel->multRatio)) * buzzerPeriodMult(channel) - channel->multDetune;
+        float mult = channel->buzzerWaveform == 2 || channel->buzzerWaveform == 6 ? 0.5f : 1.0f;
+        float freq = getNoteFreq(voice->note + voice->envelopePitch + channel->buzzerDetune + channel->pitchBend * 12.0f);
+        return freqToBuzzerPeriod(freq) * mult;
     }
 
     void SynthEngine::updateEnvelope(std::shared_ptr<Voice> voice, const std::shared_ptr<Channel> channel) {

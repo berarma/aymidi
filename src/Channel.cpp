@@ -72,8 +72,8 @@ namespace AyMidi {
         volume = 100.0f / 127.0f;
         pan = 0.5f;
         noisePeriod = 0;
-        multRatio = 4;
-        multDetune = 0;
+        buzzerDetune = 0;
+        squareDetune = 0;
         arpeggioPeriod = 0;
         attackPitch = 0;
         attack = 0;
@@ -82,7 +82,6 @@ namespace AyMidi {
         sustain = 1.0f;
         release = 0;
         buzzerWaveform = 0;
-        mixBoth = false;
     }
 
     void Channel::cmdResetCC() {

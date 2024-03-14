@@ -9,10 +9,9 @@ monospaced font.
 |-----|---------------------|
 | 00  | Square              |
 | 01  | Sawtooth            |
-| 02  | Triangle            |
-| 03  | Square + Sawtooth   |
+| 02  | Square + Sawtooth   |
+| 03  | Triangle            |
 | 04  | Square + Triangle   |
-| 05  | Noise               |
 
 ## CCs
 

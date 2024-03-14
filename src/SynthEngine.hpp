@@ -95,18 +95,16 @@ namespace AyMidi {
         MIDI_CTL_NRPN_MSB             = 0x63, /* Non-registered Parameter Number */
         MIDI_CTL_RPN_LSB              = 0x64, /* Registered Parameter Number */
         MIDI_CTL_RPN_MSB              = 0x65, /* Registered Parameter Number */
-        MIDI_CTL_AY_BUZZER_WAVEFORM   = 0x66, /* AY/YM Buzzer Waveform */
-        MIDI_CTL_AY_MIX_BOTH          = 0x67, /* AY/YM Mix both buzzer/square */
-        MIDI_CTL_AY_BUZ_SQR_RATIO     = 0x68, /* AY/YM Noise Period */
-        MIDI_CTL_AY_BUZ_SQR_DETUNE    = 0x69, /* AY/YM Noise Period */
-        MIDI_CTL_AY_NOISE_PERIOD      = 0x6A, /* AY/YM Noise Period */
-        MIDI_CTL_AY_ATTACK_PITCH      = 0x6B, /* AY/YM Noise Period */
-        MIDI_CTL_AY_ATTACK            = 0x6C, /* AY/YM Noise Period */
-        MIDI_CTL_AY_HOLD              = 0x6D, /* AY/YM Noise Period */
-        MIDI_CTL_AY_DECAY             = 0x6E, /* AY/YM Noise Period */
-        MIDI_CTL_AY_SUSTAIN           = 0x6F, /* AY/YM Noise Period */
-        MIDI_CTL_AY_RELEASE           = 0x70, /* AY/YM Noise Period */
-        MIDI_CTL_AY_ARPEGGIO_SPEED    = 0x71, /* AY/YM Noise Period */
+        MIDI_CTL_AY_NOISE_PERIOD      = 0x66, /* AY/YM Noise Period */
+        MIDI_CTL_AY_BUZZER_DETUNE     = 0x67, /* AY/YM Noise Period */
+        MIDI_CTL_AY_SQUARE_DETUNE     = 0x68, /* AY/YM Noise Period */
+        MIDI_CTL_AY_ATTACK_PITCH      = 0x69, /* AY/YM Noise Period */
+        MIDI_CTL_AY_ATTACK            = 0x6A, /* AY/YM Noise Period */
+        MIDI_CTL_AY_HOLD              = 0x6B, /* AY/YM Noise Period */
+        MIDI_CTL_AY_DECAY             = 0x6C, /* AY/YM Noise Period */
+        MIDI_CTL_AY_SUSTAIN           = 0x6D, /* AY/YM Noise Period */
+        MIDI_CTL_AY_RELEASE           = 0x6E, /* AY/YM Noise Period */
+        MIDI_CTL_AY_ARPEGGIO_SPEED    = 0x6F, /* AY/YM Noise Period */
         MIDI_CTL_ALL_SOUNDS_OFF       = 0x78, /* All Sounds Off */
         MIDI_CTL_RESET_CONTROLLERS    = 0x79, /* Reset All Controllers */
         MIDI_CTL_LOCAL_CONTROL_SWITCH = 0x7A, /* Local Control On/Off */
@@ -132,15 +130,11 @@ namespace AyMidi {
             bool polyMode;
 
             int getLevel(const std::shared_ptr<Voice> voice, const std::shared_ptr<Channel> channel) const;
-            int freqToTonePeriod(const double freq) const;
+            int freqToSquarePeriod(const double freq) const;
             int freqToBuzzerPeriod(const double freq) const;
-            int getTonePeriod(const double note) const;
-            int getBuzzerPeriod(const double note) const;
-            int getTonePeriod(const std::shared_ptr<Voice> voice, const std::shared_ptr<Channel> channel) const;
-            int getTonePeriod(const int buzzerPeriod, const std::shared_ptr<Channel> channel) const;
-            float buzzerPeriodMult(const std::shared_ptr<Channel> channel) const;
+            float getNoteFreq(const double note) const;
+            int getSquarePeriod(const std::shared_ptr<Voice> voice, const std::shared_ptr<Channel> channel) const;
             int getBuzzerPeriod(const std::shared_ptr<Voice> voice, const std::shared_ptr<Channel> channel) const;
-            int getBuzzerPeriod(const int tonePeriod, const std::shared_ptr<Channel> channel) const;
             void updateEnvelope(std::shared_ptr<Voice> voice, std::shared_ptr<Channel> channel);
             int spreadInt(const int value, const int bits, const int max) const;
             float unsignedFloat(int value, int bits) const;
@@ -155,8 +149,6 @@ namespace AyMidi {
             void process(float *left, float *right, const uint32_t size);
             void midiSend(const uint8_t* message);
             void setNoisePeriod(const int index, const int period);
-            void setMultRatio(const int index, const int ratio);
-            void setMultDetune(const int index, const int detune);
             void setArpeggioSpeed(const int index, const int speed);
             void setAttackPitch(const int index, const int pitch);
             void setAttack(const int index, const int attack);
