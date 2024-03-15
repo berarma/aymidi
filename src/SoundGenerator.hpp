@@ -9,51 +9,28 @@ namespace AyMidi {
         YM2149
     };
 
-    struct AyChannel {
-        bool toneOff = true;
-        bool noiseOff = true;
-        bool envelopeOn = false;
-        int tonePeriod;
-        int syncSquarePeriod;
-        double syncSquareCounter;
-        bool syncTone = false;
-    };
-
     class SoundGenerator {
+
         private:
+            const static Emul defaultEmul = YM2149;
             std::shared_ptr<struct ayumi> ayumi;
             Emul emul = defaultEmul;
             float gain;
-            double clockStep;
-            bool removeDc = false;
-            int envelopePeriod;
-            int syncBuzzerPeriod;
-            double syncBuzzerCounter;
-            AyChannel channels[3];
-        public:
             int clockRate;
             double sampleRate;
+            double clockStep;
+            bool removeDc = false;
 
-            const static Emul defaultEmul = YM2149;
+        public:
             SoundGenerator(double sampleRate, int clockRate);
+            int getSampleRate();
             int setClockRate(int clockRate);
+            int getClockRate() const;
             void setEmul(Emul emul);
             void enableRemoveDc(bool enable = true);
             void setGain(float gain);
-            void setNoisePeriod(int period);
-            void setEnvelopePeriod(int period);
-            void setEnvelopeShape(int shape);
-            void syncTone(int index);
-            void enableTone(int index, bool enable = true);
-            void enableNoise(int index, bool enable = true);
-            void enableEnvelope(int index, bool enable = true);
-            void setLevel(int index, int level);
-            void setTonePeriod(int index, int period);
-            void setPan(int index, float pan);
-            void setSyncSquare(int index, int period);
-            void setSyncBuzzer(int period);
             void process(float *left, float *right, const uint32_t size);
-            int getClockRate() const;
+            std::shared_ptr<struct ayumi> getAyumi();
     };
 
 }

@@ -5,7 +5,10 @@ dpf_add_plugin(aymidi
                 AyMidiPlugin.cpp
                 SynthEngine.cpp
                 Channel.cpp
+                Note.cpp
+                VoiceProcessor.cpp
                 SoundGenerator.cpp
+                Voice.cpp
                 ayumi.c
 )
 

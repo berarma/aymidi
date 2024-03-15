@@ -16,10 +16,10 @@ namespace AyMidi {
     {
         ayumi_configure(&*ayumi, emul, clockRate, sampleRate);
         setClockRate(clockRate);
+    }
 
-        for (int index = 0; index < 3; index++) {
-            ayumi_set_pan(&*ayumi, index, 0.5, 1);
-        }
+    int SoundGenerator::getSampleRate() {
+        return sampleRate;
     }
 
     int SoundGenerator::setClockRate(int clockRate) {
@@ -27,6 +27,10 @@ namespace AyMidi {
         this->clockRate = clockRate;
         this->clockStep = clockRate / sampleRate;
         return ayumi->step < 1;
+    }
+
+    int SoundGenerator::getClockRate() const {
+        return clockRate;
     }
 
     void SoundGenerator::setEmul(Emul emul) {
@@ -37,79 +41,11 @@ namespace AyMidi {
         removeDc = enable;
     }
 
-    void SoundGenerator::setNoisePeriod(int period) {
-        ayumi_set_noise(&*ayumi, period);
-    }
-
-    void SoundGenerator::setEnvelopePeriod(int period) {
-        envelopePeriod = period;
-        ayumi_set_envelope(&*ayumi, period);
-    }
-
-    void SoundGenerator::setEnvelopeShape(int shape) {
-        ayumi_set_envelope_shape(&*ayumi, shape);
-    }
-
     void SoundGenerator::setGain(float gain) {
         this->gain = gain;
     }
 
-    void SoundGenerator::enableTone(int index, bool enable) {
-        auto& channel = channels[index];
-        channel.toneOff = !enable;
-        channel.syncTone = false;
-        ayumi_set_mixer(&*ayumi, index, channel.toneOff, channel.noiseOff, channel.envelopeOn);
-    }
-
-    void SoundGenerator::enableNoise(int index, bool enable) {
-        auto& channel = channels[index];
-        channel.noiseOff = !enable;
-        ayumi_set_mixer(&*ayumi, index, channel.toneOff, channel.noiseOff, channel.envelopeOn);
-    }
-
-    void SoundGenerator::enableEnvelope(int index, bool enable) {
-        auto& channel = channels[index];
-        channel.envelopeOn = enable;
-        ayumi_set_mixer(&*ayumi, index, channel.toneOff, channel.noiseOff, channel.envelopeOn);
-    }
-
-    void SoundGenerator::syncTone(int index) {
-        auto& channel = channels[index];
-        channel.syncTone = true;
-    }
-
-    void SoundGenerator::setLevel(int index, int level) {
-        ayumi_set_volume(&*ayumi, index, level);
-    }
-
-    void SoundGenerator::setTonePeriod(int index, int period) {
-        channels[index].tonePeriod = period;
-        ayumi_set_tone(&*ayumi, index, period);
-    }
-
-    void SoundGenerator::setPan(int index, float pan) {
-        ayumi_set_pan(&*ayumi, index, pan, 1);
-    }
-
     void SoundGenerator::process(float* left, float* right, const uint32_t size) {
-        bool syncTones = false;
-
-        for (int i = 0; i < 3; i++) {
-            if (!channels[i].toneOff && channels[i].syncTone) {
-                ayumi_set_tone(&*ayumi, i, 0);
-                syncTones = true;
-            }
-        }
-        if (syncTones) {
-            ayumi_process(&*ayumi, true);
-            for (int i = 0; i < 3; i++) {
-                if (!channels[i].toneOff && channels[i].syncTone) {
-                    ayumi_set_tone(&*ayumi, i, channels[i].tonePeriod);
-                    channels[i].syncTone = false;
-                }
-            }
-        }
-
         for (int i = 0; i < size; i++) {
             ayumi_process(&*ayumi, false);
             if (removeDc) {
@@ -122,4 +58,7 @@ namespace AyMidi {
         }
     }
 
+    std::shared_ptr<struct ayumi> SoundGenerator::getAyumi() {
+        return ayumi;
+    }
 }

@@ -1,99 +1,208 @@
 #include <algorithm>
+#include <math.h>
 #include "Channel.hpp"
+#include <DistrhoUtils.hpp>
 
 namespace AyMidi {
 
-    Channel::Channel(const int index) {
-        this->index = index;
-        cmdReset();
+    Channel::Channel(std::shared_ptr<VoiceProcessor> vp, int index) :
+        index(index),
+        vp(vp)
+    {
+        msgReset();
     }
 
-    void Channel::setProgram(int newProgram) {
-        if (newProgram < 5 && newProgram != program) {
-            program = newProgram;
-            buzzerWaveform = 4 + 2 * (program / 3);
-            programChange = true;
-        }
+    std::shared_ptr<Note> Channel::findNote(const int key) const {
+        auto it = std::find_if(notes.begin(), notes.end(), [key](std::shared_ptr<Note> note) { return note->key == key; });
+        return *it;
     }
 
-    std::shared_ptr<Voice> Channel::cmdNoteOn(const int note, const int velocity) {
-        if (velocity == 0) {
-            cmdNoteOff(note, velocity);
+    std::shared_ptr<Note> Channel::nextArpeggioNote() {
+        if (notes.empty()) {
             return nullptr;
         }
-        allocatedVoices.erase(std::remove_if(allocatedVoices.begin(), allocatedVoices.end(), [note](std::shared_ptr<Voice> voice) {
-            if (voice->note == note) {
-                voice->remove = true;
-                return true;
-            }
-            return false;
-        }), allocatedVoices.end());
-        auto voice = std::make_shared<Voice>(index, note, velocity);
-        allocatedVoices.push_back(voice);
-        return voice;
+        auto it = std::upper_bound(notes.begin(), notes.end(), currentNote, [arpeggioPeriod = params.arpeggioPeriod](std::shared_ptr<Note> a, std::shared_ptr<Note> b) {
+            return arpeggioPeriod > 0 ? a->key < b->key : a->key > b->key;
+        });
+        if (it == notes.end()) {
+            return notes[0];
+        }
+        return *it;
     }
 
-    void Channel::cmdNoteOff(const int note, const int velocity) {
-        std::for_each(allocatedVoices.begin(), allocatedVoices.end(), [note,release=release](std::shared_ptr<Voice> voice) {
-            if (voice->note == note) {
-                if (release) {
-                    voice->release = true;
-                } else {
-                    voice->remove = true;
-                }
+    void Channel::purgeNotes() {
+        notes.erase(std::remove_if(notes.begin(), notes.end(), [](std::shared_ptr<Note> note) { return !note->isValid(); }), notes.end());
+    }
+
+    void Channel::msgNoteOn(const int key, const int velocity) {
+        auto note = std::make_shared<Note>(&params, key, velocity);
+        if (params.arpeggioPeriod != 0) {
+            notes.insert(std::upper_bound(notes.begin(), notes.end(), note, [arpeggioPeriod = params.arpeggioPeriod](std::shared_ptr<Note> a, std::shared_ptr<Note> b) {
+                return arpeggioPeriod > 0 ? a->key < b->key : a->key > b->key;
+            }), note);
+        } else {
+            notes.push_back(note);
+        }
+        vp->registerNote(note, index);
+        currentNote = note;
+    }
+
+    void Channel::msgNoteOff(const int key, const int velocity) {
+        std::for_each(notes.begin(), notes.end(), [key](std::shared_ptr<Note> note) {
+            if (note->key == key) {
+                note->release();
             }
         });
     }
 
-    void Channel::purge() {
-        allocatedVoices.erase(std::remove_if(allocatedVoices.begin(), allocatedVoices.end(), [](std::shared_ptr<Voice> voice) { return voice->remove; }), allocatedVoices.end());
+    void Channel::msgKeyPressure(const int key, const int pressure) {
+        auto note = findNote(key);
+        note->setPressure(pressure);
     }
 
-    std::vector<std::shared_ptr<Voice>> Channel::getVoices() {
-        if (arpeggioPeriod != 0) {
-            std::sort(allocatedVoices.begin(), allocatedVoices.end(), [arpeggioPeriod = arpeggioPeriod](std::shared_ptr<Voice> a, std::shared_ptr<Voice> b) { return arpeggioPeriod > 0 ? a->note < b->note : a->note > b->note; });
-        }
-        return allocatedVoices;
+    void Channel::msgPressure(int pressure) {
+        params.pressure = pressure / 127.0f;
     }
 
-    void Channel::cmdKeyPressure(const int note, const int pressure) {
-        auto it = std::find_if(allocatedVoices.begin(), allocatedVoices.end(), [note](std::shared_ptr<Voice> voice) { return voice->note == note; });
-        (*it)->pressure = pressure;
-    }
-
-    void Channel::cmdAllSoundsOff() {
-        for (auto& voice : allocatedVoices) {
-            voice->remove = true;
+    void Channel::msgProgramChange(int program) {
+        if (program < 5) {
+            params.buzzer = program > 0;
+            params.square = program % 2 == 0;
+            params.buzzerWaveform = 4 + 2 * (program / 3);
         }
     }
 
-    void Channel::cmdAllNotesOff() {
-        for (auto& voice : allocatedVoices) {
-            voice->release = true;
+    void Channel::msgVolume(int volume) {
+        params.volume = volume / 127.0f;
+    }
+
+    void Channel::msgAllSoundsOff() {
+        for (auto note : notes) {
+            note->drop();
         }
     }
 
-    void Channel::cmdReset() {
-        cmdAllNotesOff();
-        cmdResetCC();
-        setProgram(0);
-        volume = 100.0f / 127.0f;
-        pan = 0.5f;
-        noisePeriod = 0;
-        buzzerDetune = 0;
-        squareDetune = 0;
-        arpeggioPeriod = 0;
-        attackPitch = 0;
-        attack = 0;
-        hold = 0;
-        decay = 0;
-        sustain = 1.0f;
-        release = 0;
+    void Channel::msgAllNotesOff() {
+        for (auto note : notes) {
+            note->release();
+        }
     }
 
-    void Channel::cmdResetCC() {
-        pitchBend = 0.0f;
-        modWheel = 0.0f;
-        pressure = 0.0f;
+    void Channel::msgPitchBend(int lsb, int msb) {
+        params.pitchBend = makeFloat(lsb + (msb << 7), 14, -1.0f, 1.0f);
+    }
+
+    void Channel::msgModWheel(int value) {
+        params.modWheel = makeFloat(value, 7, 0.0f, 1.0f);
+    }
+
+    void Channel::msgPan(int value) {
+        params.pan = makeFloat(value, 7, 0.0f, 1.0f);
+    }
+
+    void Channel::msgNoisePeriod(int period) {
+        params.noisePeriod = makeInt(period, 7, 0, 32);
+    }
+
+    void Channel::msgBuzzerDetune(int detune) {
+        params.buzzerDetune = makeFloat(detune, 7, -16.0f, 16.0f);
+    }
+
+    void Channel::msgSquareDetune(int detune) {
+        params.squareDetune = makeFloat(detune, 7, -16.0f, 16.0f);
+    }
+
+    void Channel::msgAttackPitch(int pitch) {
+        params.envelope.attackPitch = pitch - 64;
+    }
+
+    void Channel::msgAttack(int attack) {
+        params.envelope.attack = attack;
+    }
+
+    void Channel::msgHold(int hold) {
+        params.envelope.hold = hold;
+    }
+
+    void Channel::msgDecay(int decay) {
+        params.envelope.decay = decay;
+    }
+
+    void Channel::msgSustain(int sustain) {
+        params.envelope.sustain = sustain / 127.0f;
+    }
+
+    void Channel::msgRelease(int release) {
+        params.envelope.release = release;
+    }
+
+    void Channel::msgArpeggioRate(int rate) {
+        auto prevArpeggioPeriod = params.arpeggioPeriod;
+        params.arpeggioPeriod = (64 - makeInt(rate, 7, 0, 64)) - (rate < 64 ? 65 : 0);
+        if (params.arpeggioPeriod == 32) {
+            params.arpeggioPeriod = 0;
+        }
+        if (params.arpeggioPeriod != 0 && (params.arpeggioPeriod * prevArpeggioPeriod) <= 0) {
+            std::sort(notes.begin(), notes.end(), [arpeggioPeriod = params.arpeggioPeriod](std::shared_ptr<Note> a, std::shared_ptr<Note> b) {
+                return arpeggioPeriod > 0 ? a->key < b->key : a->key > b->key;
+            });
+        }
+    }
+
+    void Channel::msgReset() {
+        msgAllSoundsOff();
+        msgResetCC();
+        msgProgramChange(0);
+        msgVolume(100);
+        msgPan(64);
+        msgNoisePeriod(0);
+        msgBuzzerDetune(64);
+        msgSquareDetune(64);
+        msgArpeggioRate(64);
+        msgAttackPitch(0);
+        msgAttack(0);
+        msgHold(0);
+        msgDecay(0);
+        msgSustain(127);
+        msgRelease(0);
+    }
+
+    void Channel::msgResetCC() {
+        msgPitchBend(0, 0x40);
+        msgModWheel(0);
+        msgPressure(0);
+    }
+
+    int Channel::makeInt(const int value, const int bits, const int min, const int max) const {
+        return std::round(makeFloat(value, bits, min, max));
+    }
+
+    float Channel::makeFloat(const int value, const int bits, const float min, const float max) const {
+        return (max - min) * value / ((1 << bits) - 1) + min;
+    }
+
+    void Channel::updateArpeggio(int updateRate) {
+        int arpeggioPeriod = std::round((float)params.arpeggioPeriod * updateRate / 100.0f);
+        arpeggioCounter++;
+        if (arpeggioCounter >= abs(arpeggioPeriod)) {
+            arpeggioCounter = 0;
+            auto nextNote = nextArpeggioNote();
+            if (nextNote != nullptr) {
+                vp->registerNote(nextNote, index);
+                currentNote = nextNote;
+            }
+        }
+    }
+
+    void Channel::update(int updateRate) {
+        for (auto note: notes) {
+            if (note->isValid()) {
+                note->updateEnvelope();
+            }
+        }
+        purgeNotes();
+        if (vp->getMonoMode() && params.arpeggioPeriod != 0) {
+            updateArpeggio(updateRate);
+        }
     }
 }

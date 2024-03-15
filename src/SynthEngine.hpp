@@ -1,8 +1,8 @@
 #pragma once
 
 #include <cstdint>
-#include <vector>
 #include "SoundGenerator.hpp"
+#include "VoiceProcessor.hpp"
 #include "Channel.hpp"
 
 namespace AyMidi {
@@ -104,7 +104,7 @@ namespace AyMidi {
         MIDI_CTL_AY_DECAY             = 0x6C, /* AY/YM Noise Period */
         MIDI_CTL_AY_SUSTAIN           = 0x6D, /* AY/YM Noise Period */
         MIDI_CTL_AY_RELEASE           = 0x6E, /* AY/YM Noise Period */
-        MIDI_CTL_AY_ARPEGGIO_SPEED    = 0x6F, /* AY/YM Noise Period */
+        MIDI_CTL_AY_ARPEGGIO_RATE     = 0x6F, /* AY/YM Noise Period */
         MIDI_CTL_ALL_SOUNDS_OFF       = 0x78, /* All Sounds Off */
         MIDI_CTL_RESET_CONTROLLERS    = 0x79, /* Reset All Controllers */
         MIDI_CTL_LOCAL_CONTROL_SWITCH = 0x7A, /* Local Control On/Off */
@@ -118,49 +118,26 @@ namespace AyMidi {
     class SynthEngine {
         private:
             std::shared_ptr<SoundGenerator> sg;
+            std::shared_ptr<VoiceProcessor> vp;
             std::shared_ptr<Channel> channels[16];
-            std::shared_ptr<Voice> voices[3];
-            std::vector<int> voicePool;
             int updateRate;
             int updatePeriod;
             int updateCounter;
-            int basicChannel;
+            int baseChannel;
             int lastChannel;
             bool omniMode;
             bool polyMode;
 
-            int getLevel(const std::shared_ptr<Voice> voice, const std::shared_ptr<Channel> channel) const;
-            int freqToSquarePeriod(const double freq) const;
-            int freqToBuzzerPeriod(const double freq) const;
-            float getNoteFreq(const double note) const;
-            int getSquarePeriod(const std::shared_ptr<Voice> voice, const std::shared_ptr<Channel> channel) const;
-            int getBuzzerPeriod(const std::shared_ptr<Voice> voice, const std::shared_ptr<Channel> channel) const;
-            void updateEnvelope(std::shared_ptr<Voice> voice, std::shared_ptr<Channel> channel);
-            int spreadInt(const int value, const int bits, const int max) const;
-            float unsignedFloat(int value, int bits) const;
-            float signedFloat(int value, int bits) const;
-            void synch();
             MidiMsgStatus getMidiMsgStatus(const uint8_t* msg);
             void allNotesOff();
-            void noteOn(Channel* channel, int note, int velocity);
+            void update();
 
         public:
             SynthEngine(std::shared_ptr<SoundGenerator> sg);
-            void process(float *left, float *right, const uint32_t size);
-            void midiSend(const uint8_t* message);
-            void setNoisePeriod(const int index, const int period);
-            void setArpeggioSpeed(const int index, const int speed);
-            void setAttackPitch(const int index, const int pitch);
-            void setAttack(const int index, const int attack);
-            void setHold(const int index, const int hold);
-            void setDecay(const int index, const int decay);
-            void setSustain(const int index, const float sustain);
-            void setRelease(const int index, const int release);
             void setUpdateRate(int rate);
             void setBasicChannel(int nChannel);
-            void setOmniMode(bool enable);
-            void setPolyMode(bool enable);
-            void setHarpMode(bool enable);
+            void midiSend(const uint8_t* message);
+            void process(float *left, float *right, const uint32_t size);
     };
 
 }
