@@ -14,6 +14,9 @@ namespace AyMidi {
 
     std::shared_ptr<Note> Channel::findNote(const int key) const {
         auto it = std::find_if(notes.begin(), notes.end(), [key](std::shared_ptr<Note> note) { return note->key == key; });
+        if (it == notes.end()) {
+            return nullptr;
+        }
         return *it;
     }
 
@@ -35,6 +38,9 @@ namespace AyMidi {
     }
 
     void Channel::msgNoteOn(const int key, const int velocity) {
+        if (findNote(key) != nullptr) {
+            return;
+        }
         auto note = std::make_shared<Note>(&params, key, velocity);
         if (params.arpeggioPeriod != 0) {
             notes.insert(std::upper_bound(notes.begin(), notes.end(), note, [arpeggioPeriod = params.arpeggioPeriod](std::shared_ptr<Note> a, std::shared_ptr<Note> b) {
@@ -57,7 +63,9 @@ namespace AyMidi {
 
     void Channel::msgKeyPressure(const int key, const int pressure) {
         auto note = findNote(key);
-        note->setPressure(pressure);
+        if (note != nullptr) {
+            note->setPressure(pressure);
+        }
     }
 
     void Channel::msgPressure(int pressure) {
