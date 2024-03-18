@@ -45,15 +45,13 @@ namespace AyMidi {
         return 440.0f * pow(2, (key - 69) / 12.0f);
     }
 
-    int Note::getSquarePeriod() const {
-        float freq = getNoteFreq(key + envelopePitch + params->squareDetune + params->pitchBend * 12.0f);
-        return voice->freqToSquarePeriod(freq);
+    int Note::getSquareFreq() const {
+        return getNoteFreq(key + envelopePitch + params->squareDetune + params->pitchBend * 12.0f);
     }
 
-    int Note::getBuzzerPeriod() const {
+    int Note::getBuzzerFreq() const {
         float mult = params->buzzerWaveform == 2 || params->buzzerWaveform == 6 ? 2.0f : 1.0f;
-        float freq = getNoteFreq(key + envelopePitch + params->buzzerDetune + params->pitchBend * 12.0f);
-        return voice->freqToBuzzerPeriod(freq * mult);
+        return getNoteFreq(key + envelopePitch + params->buzzerDetune + params->pitchBend * 12.0f);
     }
 
     void Note::updateEnvelope() {
@@ -110,11 +108,11 @@ namespace AyMidi {
                 voice->setEnvelopeShape(params->buzzerWaveform + 8);
                 setup = false;
             }
-            voice->setEnvelopePeriod(getBuzzerPeriod());
+            voice->setEnvelopeFreq(getBuzzerFreq());
         }
         if (params->square) {
             voice->setLevel(getLevel());
-            voice->setTonePeriod(getSquarePeriod());
+            voice->setToneFreq(getSquareFreq());
         }
         voice->enableNoise(params->noisePeriod > 0);
         if (params->noisePeriod > 0) {

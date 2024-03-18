@@ -18,6 +18,10 @@ namespace AyMidi {
         setClockRate(clockRate);
     }
 
+    std::shared_ptr<struct ayumi> SoundGenerator::getAyumi() {
+        return ayumi;
+    }
+
     int SoundGenerator::getSampleRate() {
         return sampleRate;
     }
@@ -45,6 +49,33 @@ namespace AyMidi {
         this->gain = gain;
     }
 
+    int SoundGenerator::freqToSquarePeriod(const double freq) const {
+        return std::min((int)std::round(clockRate / 16.0f / freq), 0x0FFF);
+    }
+
+    int SoundGenerator::freqToBuzzerPeriod(const double freq) const {
+        return std::min((int)std::round(clockRate / 256.0f / freq), 0xFFFF);
+    }
+
+    void SoundGenerator::setNoisePeriod(int period) {
+        ayumi_set_noise(&*ayumi, period);
+    }
+
+    void SoundGenerator::setEnvelopePeriod(int period) {
+        ayumi_set_envelope(&*ayumi, period);
+    }
+
+    void SoundGenerator::setEnvelopeFreq(int freq) {
+        ayumi_set_envelope(&*ayumi, freqToBuzzerPeriod(freq));
+    }
+
+    void SoundGenerator::setEnvelopeShape(int shape) {
+        if (shape != lastEnvShape) {
+            ayumi_set_envelope_shape(&*ayumi, shape);
+            lastEnvShape = shape;
+        }
+    }
+
     void SoundGenerator::process(float* left, float* right, const uint32_t size) {
         for (int i = 0; i < size; i++) {
             ayumi_process(&*ayumi, false);
@@ -56,9 +87,5 @@ namespace AyMidi {
             left++;
             right++;
         }
-    }
-
-    std::shared_ptr<struct ayumi> SoundGenerator::getAyumi() {
-        return ayumi;
     }
 }

@@ -21,24 +21,20 @@ namespace AyMidi {
         setLevel(0);
     }
 
-    int Voice::freqToSquarePeriod(const double freq) const {
-        return std::min((int)std::round(sg->getClockRate() / 16.0f / freq), 0x0FFF);
-    }
-
-    int Voice::freqToBuzzerPeriod(const double freq) const {
-        return std::min((int)std::round(sg->getClockRate() / 256.0f / freq), 0xFFFF);
-    }
-
     void Voice::setNoisePeriod(int period) {
-        ayumi_set_noise(&*sg->getAyumi(), period);
+        sg->setNoisePeriod(period);
     }
 
     void Voice::setEnvelopePeriod(int period) {
-        ayumi_set_envelope(&*sg->getAyumi(), period);
+        sg->setEnvelopePeriod(period);
+    }
+
+    void Voice::setEnvelopeFreq(int freq) {
+        sg->setEnvelopeFreq(freq);
     }
 
     void Voice::setEnvelopeShape(int shape) {
-        ayumi_set_envelope_shape(&*sg->getAyumi(), shape);
+        sg->setEnvelopeShape(shape);
     }
 
     void Voice::enableTone(bool enable) {
@@ -62,6 +58,10 @@ namespace AyMidi {
 
     void Voice::setTonePeriod(int period) {
         ayumi_set_tone(&*sg->getAyumi(), index, period);
+    }
+
+    void Voice::setToneFreq(int freq) {
+        ayumi_set_tone(&*sg->getAyumi(), index, sg->freqToSquarePeriod(freq));
     }
 
     void Voice::setPan(float pan) {

@@ -23,8 +23,8 @@ namespace AyMidi {
 
             float getNoteFreq(const double key) const;
             int getLevel() const;
-            int getSquarePeriod() const;
-            int getBuzzerPeriod() const;
+            int getSquareFreq() const;
+            int getBuzzerFreq() const;
 
         public:
             int key;

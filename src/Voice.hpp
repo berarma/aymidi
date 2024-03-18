@@ -23,16 +23,16 @@ namespace AyMidi {
             void mute();
             void setNoisePeriod(int period);
             void setEnvelopePeriod(int period);
+            void setEnvelopeFreq(int freq);
             void setEnvelopeShape(int shape);
             void enableTone(bool enable = true);
             void enableNoise(bool enable = true);
             void enableEnvelope(bool enable = true);
             void setLevel(int level);
             void setTonePeriod(int period);
+            void setToneFreq(int freq);
             void setPan(float pan);
             void setSyncSquare(int period);
             void setSyncBuzzer(int period);
-            int freqToSquarePeriod(const double freq) const;
-            int freqToBuzzerPeriod(const double freq) const;
     };
 }
