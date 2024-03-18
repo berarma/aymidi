@@ -82,6 +82,9 @@ care of your ears but also to get it to sound more like the original hardware.
 
 The [MIDI implementation table](midi.md) can help you when playing.
 
+There's an instruments file for [VMPK](https://github.com/pedrolcl/VMPK) in the
+[resources directory](resources).
+
 ## Related projects
 
 Other similar projects which might better fulfill your needs and also served as
