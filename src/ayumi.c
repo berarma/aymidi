@@ -285,6 +285,8 @@ static double decimate(double* x) {
   return y;
 }
 
+// single_cycle: when set to true, run a single PSG cycle so that the internal
+// counters are incremented. Needed for square tone sync.
 int ayumi_process(struct ayumi* ay, int single_cycle) {
   int i;
   int exit = 0;
