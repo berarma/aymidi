@@ -95,6 +95,8 @@ inspiration:
 - [Zynayumi](https://github.com/eriser/zynayumi)
 - [Ym2149Synth](https://github.com/trash80/Ym2149Synth)
 - [Catskull Electronics](https://catskullelectronics.com/products/ym2149-synth)
+- [Arkos Tracker 2](https://www.julien-nevo.com/arkostracker/)
+- [maxYMiser](http://www.preromanbritain.com/maxymiser/)
 
 # Learning resources
 
@@ -104,6 +106,7 @@ Thanks to the authors of these resources which helped in the learning process:
 - [MIDI 1.0 Control Change Messages](https://midi.org/midi-1-0-control-change-messages)
 - [Philip Rees article on MIDI channels, voices, timbres and modes](http://www.philrees.co.uk/articles/midimode.htm)
 - [gwEm's maxYMiser Tutorial](https://www.youtube.com/watch?v=OjPPUdwIAC0&list=PL1NhyQvCufQnczcLMUHOkSHtCt2dHi9_Z)
+- [Arkos Tracker 2 manual and tutorials](https://www.julien-nevo.com/arkostracker/)
 
 ## Attributions
 
