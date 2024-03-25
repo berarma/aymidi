@@ -73,10 +73,10 @@ namespace AyMidi {
         MIDI_CTL_SC3_RELEASE_TIME     = 0x48, /* Sound Controller 3 (default: Release Time) */
         MIDI_CTL_SC4_ATTACK_TIME      = 0x49, /* Sound Controller 4 (default: Attack Time) */
         MIDI_CTL_SC5_BRIGHTNESS       = 0x4A, /* Sound Controller 5 (default: Brightness) */
-        MIDI_CTL_SC6                  = 0x4B, /* Sound Controller 6 (default: Decay Time) */
-        MIDI_CTL_SC7                  = 0x4C, /* Sound Controller 7 (default: Vibrato Rate) */
-        MIDI_CTL_SC8                  = 0x4D, /* Sound Controller 8 (default: Vibrato Depth) */
-        MIDI_CTL_SC9                  = 0x4E, /* Sound Controller 9 (default: Vibrato Delay) */
+        MIDI_CTL_SC6_DECAY_TIME       = 0x4B, /* Sound Controller 6 (default: Decay Time) */
+        MIDI_CTL_SC7_VIBRATO_RATE     = 0x4C, /* Sound Controller 7 (default: Vibrato Rate) */
+        MIDI_CTL_SC8_VIBRATO_DEPTH    = 0x4D, /* Sound Controller 8 (default: Vibrato Depth) */
+        MIDI_CTL_SC9_VIBRATO_DELAY    = 0x4E, /* Sound Controller 9 (default: Vibrato Delay) */
         MIDI_CTL_SC10                 = 0x4F, /* Sound Controller 10 (default: undefined)  */
         MIDI_CTL_GENERAL_PURPOSE5     = 0x50, /* General Purpose Controller 5 */
         MIDI_CTL_GENERAL_PURPOSE6     = 0x51, /* General Purpose Controller 6 */

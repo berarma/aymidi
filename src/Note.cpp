@@ -45,17 +45,27 @@ namespace AyMidi {
         return 440.0f * pow(2, (key - 69) / 12.0f);
     }
 
-    int Note::getSquareFreq() const {
-        return getNoteFreq(key + envelopePitch + params->squareDetune + params->pitchBend * 12.0f);
+    int Note::getSquareFreq(int updateRate) const {
+        auto vibratoPitch = 0.0f;
+        if (params->vibratoDepth > 0 && params->vibratoRate > 0 && (10.0f * timeCounter / updateRate) >= params->vibratoDelay) {
+            vibratoPitch = params->vibratoDepth * std::sin(params->vibratoRate * timeCounter / updateRate * 2.0f * M_PI);
+        }
+        return getNoteFreq(key + envelopePitch + vibratoPitch + params->squareDetune + params->pitchBend * 12.0f);
     }
 
-    int Note::getBuzzerFreq() const {
+    int Note::getBuzzerFreq(int updateRate) const {
+        auto vibratoPitch = 0.0f;
+        if (params->vibratoDepth > 0 && params->vibratoRate > 0 && (10.0f * timeCounter / updateRate) >= params->vibratoDelay) {
+            vibratoPitch = params->vibratoDepth * std::sin(params->vibratoRate * timeCounter / updateRate * 2.0f * M_PI);
+        }
         float mult = params->buzzerWaveform == 2 || params->buzzerWaveform == 6 ? 2.0f : 1.0f;
-        return getNoteFreq(key + envelopePitch + params->buzzerDetune + params->pitchBend * 12.0f);
+        return getNoteFreq(key + envelopePitch + vibratoPitch + params->buzzerDetune + params->pitchBend * 12.0f);
     }
 
     void Note::updateEnvelope() {
         auto envelope = params->envelope;
+        auto envelopeCounter = timeCounter;
+        timeCounter++;
         envelopePitch = 0.0f;
         if (released) {
             if (releaseCounter >= envelope.release) {
@@ -79,23 +89,21 @@ namespace AyMidi {
             return;
         }
 
-        auto counter = envelopeCounter;
-        envelopeCounter++;
-        if (envelope.attackPitch && counter < (envelope.attack + envelope.hold)) {
-            envelopePitch = envelope.attackPitch * (1.0f - ((float)counter / (envelope.attack + envelope.hold)));
+        if (envelope.attackPitch && envelopeCounter < (envelope.attack + envelope.hold)) {
+            envelopePitch = envelope.attackPitch * (1.0f - ((float)envelopeCounter / (envelope.attack + envelope.hold)));
         }
-        if (counter < envelope.attack) {
-            envelopeLevel = (float)counter / envelope.attack;
+        if (envelopeCounter < envelope.attack) {
+            envelopeLevel = (float)envelopeCounter / envelope.attack;
             return;
         }
-        counter -= envelope.attack;
-        if (counter < envelope.hold) {
+        envelopeCounter -= envelope.attack;
+        if (envelopeCounter < envelope.hold) {
             envelopeLevel = 1.0f;
             return;
         }
-        counter -= envelope.hold;
-        if (counter < envelope.decay) {
-            envelopeLevel = 1.0f + (envelope.sustain - 1.0f) * ((float)counter / envelope.decay);
+        envelopeCounter -= envelope.hold;
+        if (envelopeCounter < envelope.decay) {
+            envelopeLevel = 1.0f + (envelope.sustain - 1.0f) * ((float)envelopeCounter / envelope.decay);
             return;
         }
     }
@@ -108,11 +116,11 @@ namespace AyMidi {
                 voice->setEnvelopeShape(params->buzzerWaveform + 8);
                 setup = false;
             }
-            voice->setEnvelopeFreq(getBuzzerFreq());
+            voice->setEnvelopeFreq(getBuzzerFreq(updateRate));
         }
         if (params->square) {
             voice->setLevel(getLevel());
-            voice->setToneFreq(getSquareFreq());
+            voice->setToneFreq(getSquareFreq(updateRate));
         }
         voice->enableNoise(params->noisePeriod > 0);
         if (params->noisePeriod > 0) {

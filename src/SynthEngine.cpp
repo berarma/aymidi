@@ -125,6 +125,15 @@ namespace AyMidi {
                     case MIDI_CTL_MSB_MAIN_VOLUME:
                         channel->msgVolume(message[2]);
                         break;
+                    case MIDI_CTL_SC7_VIBRATO_RATE:
+                        channel->msgVibratoRate(message[2]);
+                        break;
+                    case MIDI_CTL_SC8_VIBRATO_DEPTH:
+                        channel->msgVibratoDepth(message[2]);
+                        break;
+                    case MIDI_CTL_SC9_VIBRATO_DELAY:
+                        channel->msgVibratoDelay(message[2]);
+                        break;
                     /* AY/YM Effects */
                     case MIDI_CTL_AY_NOISE_PERIOD:
                         channel->msgNoisePeriod(message[2]);

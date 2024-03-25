@@ -25,5 +25,8 @@ namespace AyMidi {
             float squareDetune;
             int arpeggioPeriod;
             Envelope envelope;
+            float vibratoRate; // In Hz
+            float vibratoDepth; // In semitones
+            int vibratoDelay; // In tenths of a second
     };
 }

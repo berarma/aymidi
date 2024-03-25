@@ -46,6 +46,9 @@ namespace AyMidi {
             void msgSustain(int sustain);
             void msgRelease(int release);
             void msgArpeggioRate(int rate);
+            void msgVibratoRate(int rate);
+            void msgVibratoDepth(int depth);
+            void msgVibratoDelay(int delay);
             void msgAllSoundsOff();
             void msgAllNotesOff();
             void msgReset();

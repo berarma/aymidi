@@ -41,6 +41,7 @@ MIDI:
 - Velocity.
 - Pitch bend.
 - Voice pan.
+- Vibrato
 
 ## Build
 

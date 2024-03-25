@@ -14,7 +14,7 @@ namespace AyMidi {
             bool inRelease;
             float envelopeLevel;
             float releaseStartLevel;
-            unsigned envelopeCounter;
+            unsigned timeCounter = 0;
             unsigned releaseCounter;
             float envelopePitch;
             bool setup;
@@ -23,8 +23,8 @@ namespace AyMidi {
 
             float getNoteFreq(const double key) const;
             int getLevel() const;
-            int getSquareFreq() const;
-            int getBuzzerFreq() const;
+            int getSquareFreq(int updateRate) const;
+            int getBuzzerFreq(int updateRate) const;
 
         public:
             int key;

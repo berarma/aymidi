@@ -157,12 +157,27 @@ namespace AyMidi {
         }
     }
 
+    void Channel::msgVibratoRate(int rate) {
+        params.vibratoRate = makeFloat(rate, 7, 0.0f, 10.0f);
+    }
+
+    void Channel::msgVibratoDepth(int depth) {
+        params.vibratoDepth = makeFloat(depth, 7, 0.0f, 1.0f);
+    }
+
+    void Channel::msgVibratoDelay(int delay) {
+        params.vibratoDelay = makeInt(delay, 7, 0, 32);
+    }
+
     void Channel::msgReset() {
         msgAllSoundsOff();
         msgResetCC();
         msgProgramChange(0);
         msgVolume(100);
         msgPan(64);
+        msgVibratoRate(0);
+        msgVibratoDepth(0);
+        msgVibratoDelay(0);
         msgNoisePeriod(0);
         msgBuzzerDetune(64);
         msgSquareDetune(64);
