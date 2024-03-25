@@ -48,13 +48,13 @@ namespace AyMidi {
         return std::max(releasedVoiceId, oldestVoiceId);
     }
 
-    void VoiceProcessor::registerNote(std::shared_ptr<Note> note, int channelId) {
+    void VoiceProcessor::registerNote(std::shared_ptr<Note> note) {
         int voiceId;
         if (monoMode) {
             if (omniMode) {
                 voiceId = 0;
             } else {
-                voiceId = channelId % 3;
+                voiceId = note->channelId % 3;
             }
         } else {
             voiceId = findFreeVoice();
@@ -63,6 +63,9 @@ namespace AyMidi {
             }
         }
         note->setVoice(voices[voiceId]);
+        if (notes[voiceId] != nullptr && notes[voiceId]->isValid() && notes[voiceId]->channelId == note->channelId) {
+            note->setStartKey(notes[voiceId]->key);
+        }
         notes[voiceId] = note;
         tokens[voiceId] = lastToken++;
     }

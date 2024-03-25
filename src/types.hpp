@@ -28,5 +28,8 @@ namespace AyMidi {
             float vibratoRate; // In Hz
             float vibratoDepth; // In semitones
             int vibratoDelay; // In tenths of a second
+            bool portamento;
+            int portamentoTime;
+            int portamentoControl;
     };
 }

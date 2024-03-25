@@ -42,6 +42,7 @@ MIDI:
 - Pitch bend.
 - Voice pan.
 - Vibrato
+- Portamento
 
 ## Build
 

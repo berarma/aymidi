@@ -27,7 +27,7 @@ namespace AyMidi {
             bool getOmniMode() const;
             void setMonoMode(bool enable);
             bool getMonoMode() const;
-            void registerNote(std::shared_ptr<Note> note, int channelId);
+            void registerNote(std::shared_ptr<Note> note);
             void update(int updateRate);
     };
 }

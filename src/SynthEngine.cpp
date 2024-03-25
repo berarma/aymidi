@@ -134,6 +134,15 @@ namespace AyMidi {
                     case MIDI_CTL_SC9_VIBRATO_DELAY:
                         channel->msgVibratoDelay(message[2]);
                         break;
+                    case MIDI_CTL_PORTAMENTO:
+                        channel->msgPortamento(message[2]);
+                        break;
+                    case MIDI_CTL_MSB_PORTAMENTO_TIME:
+                        channel->msgPortamentoTime(message[2]);
+                        break;
+                    case MIDI_CTL_PORTAMENTO_CONTROL:
+                        channel->msgPortamentoControl(message[2]);
+                        break;
                     /* AY/YM Effects */
                     case MIDI_CTL_AY_NOISE_PERIOD:
                         channel->msgNoisePeriod(message[2]);

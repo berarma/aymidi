@@ -3,14 +3,20 @@
 
 namespace AyMidi {
 
-    Note::Note(ChannelData* params, int key, int velocity) :
+    Note::Note(ChannelData* params, int key, int velocity, int channelId) :
         params(params),
         key(key),
-        velocity(velocity)
+        velocity(velocity),
+        channelId(channelId),
+        startKey(0)
     {
         setup = true;
         valid = true;
         released = false;
+        if (params->portamentoControl > 0) {
+            startKey = params->portamentoControl;
+            params->portamentoControl = 0;
+        }
     }
 
     void Note::setVoice(std::shared_ptr<Voice> voice) {
@@ -37,6 +43,12 @@ namespace AyMidi {
         this->pressure = pressure;
     }
 
+    void Note::setStartKey(int key) {
+        if (startKey == 0) {
+            startKey = key;
+        }
+    }
+
     int Note::getLevel() const {
         return (int)(envelopeLevel * velocity * params->volume / 128.0f * 16.0f);
     }
@@ -50,7 +62,11 @@ namespace AyMidi {
         if (params->vibratoDepth > 0 && params->vibratoRate > 0 && (10.0f * timeCounter / updateRate) >= params->vibratoDelay) {
             vibratoPitch = params->vibratoDepth * std::sin(params->vibratoRate * timeCounter / updateRate * 2.0f * M_PI);
         }
-        return getNoteFreq(key + envelopePitch + vibratoPitch + params->squareDetune + params->pitchBend * 12.0f);
+        auto portamentoPitch = 0.0f;
+        if (params->portamento && params->portamentoTime > 0 && (10.0f * timeCounter / updateRate < params->portamentoTime) && startKey != 0) {
+            portamentoPitch = startKey + (key - startKey) * 10.0f * timeCounter / updateRate / params->portamentoTime - key;
+        }
+        return getNoteFreq(key + envelopePitch + vibratoPitch + portamentoPitch + params->squareDetune + params->pitchBend * 12.0f);
     }
 
     int Note::getBuzzerFreq(int updateRate) const {
@@ -58,8 +74,12 @@ namespace AyMidi {
         if (params->vibratoDepth > 0 && params->vibratoRate > 0 && (10.0f * timeCounter / updateRate) >= params->vibratoDelay) {
             vibratoPitch = params->vibratoDepth * std::sin(params->vibratoRate * timeCounter / updateRate * 2.0f * M_PI);
         }
+        auto portamentoPitch = 0.0f;
+        if (params->portamento && params->portamentoTime > 0 && (10.0f * timeCounter / updateRate < params->portamentoTime) && startKey != 0) {
+            portamentoPitch = startKey + (key - startKey) * 10.0f * timeCounter / updateRate / params->portamentoTime - key;
+        }
         float mult = params->buzzerWaveform == 2 || params->buzzerWaveform == 6 ? 2.0f : 1.0f;
-        return getNoteFreq(key + envelopePitch + vibratoPitch + params->buzzerDetune + params->pitchBend * 12.0f);
+        return getNoteFreq(key + envelopePitch + vibratoPitch + portamentoPitch + params->buzzerDetune + params->pitchBend * 12.0f);
     }
 
     void Note::updateEnvelope() {

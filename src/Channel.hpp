@@ -49,6 +49,9 @@ namespace AyMidi {
             void msgVibratoRate(int rate);
             void msgVibratoDepth(int depth);
             void msgVibratoDelay(int delay);
+            void msgPortamento(int portamento);
+            void msgPortamentoTime(int time);
+            void msgPortamentoControl(int control);
             void msgAllSoundsOff();
             void msgAllNotesOff();
             void msgReset();

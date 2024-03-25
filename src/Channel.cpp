@@ -41,7 +41,7 @@ namespace AyMidi {
         if (findNote(key) != nullptr) {
             return;
         }
-        auto note = std::make_shared<Note>(&params, key, velocity);
+        auto note = std::make_shared<Note>(&params, key, velocity, index);
         if (params.arpeggioPeriod != 0) {
             notes.insert(std::upper_bound(notes.begin(), notes.end(), note, [arpeggioPeriod = params.arpeggioPeriod](std::shared_ptr<Note> a, std::shared_ptr<Note> b) {
                 return arpeggioPeriod > 0 ? a->key < b->key : a->key > b->key;
@@ -49,7 +49,7 @@ namespace AyMidi {
         } else {
             notes.push_back(note);
         }
-        vp->registerNote(note, index);
+        vp->registerNote(note);
         currentNote = note;
     }
 
@@ -169,6 +169,18 @@ namespace AyMidi {
         params.vibratoDelay = makeInt(delay, 7, 0, 32);
     }
 
+    void Channel::msgPortamento(int portamento) {
+        params.portamento = portamento > 63;
+    }
+
+    void Channel::msgPortamentoTime(int time) {
+        params.portamentoTime = makeInt(time, 7, 1, 32);
+    }
+
+    void Channel::msgPortamentoControl(int control) {
+        params.portamentoControl = control;
+    }
+
     void Channel::msgReset() {
         msgAllSoundsOff();
         msgResetCC();
@@ -194,6 +206,9 @@ namespace AyMidi {
         msgPitchBend(0, 0x40);
         msgModWheel(0);
         msgPressure(0);
+        msgPortamento(0);
+        msgPortamentoTime(0);
+        msgPortamentoControl(0);
     }
 
     int Channel::makeInt(const int value, const int bits, const int min, const int max) const {
@@ -211,7 +226,7 @@ namespace AyMidi {
             arpeggioCounter = 0;
             auto nextNote = nextArpeggioNote();
             if (nextNote != nullptr) {
-                vp->registerNote(nextNote, index);
+                vp->registerNote(nextNote);
                 currentNote = nextNote;
             }
         }
