@@ -18,8 +18,8 @@ monospaced font.
 | CC  | Function                      | Control     |
 |-----|-------------------------------|-------------|
 | 102 | Noise (off/freq)              |             |
-| 103 | Buzzer/square ratio           |             |
-| 104 | Buzzer/square detune          |             |
+| 103 | Buzzer detune                 |             |
+| 104 | Square detune                 |             |
 | 105 | Attack Pitch[^1]              |             |
 | 106 | Attack                        |             |
 | 107 | Hold                          |             |
