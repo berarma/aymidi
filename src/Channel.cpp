@@ -174,7 +174,7 @@ namespace AyMidi {
     }
 
     void Channel::msgPortamentoTime(int time) {
-        params.portamentoTime = makeInt(time, 7, 1, 32);
+        params.portamentoTime = makeInt(time, 7, 0, 32);
     }
 
     void Channel::msgPortamentoControl(int control) {
@@ -206,7 +206,7 @@ namespace AyMidi {
         msgPitchBend(0, 0x40);
         msgModWheel(0);
         msgPressure(0);
-        msgPortamento(0);
+        msgPortamento(127);
         msgPortamentoTime(0);
         msgPortamentoControl(0);
     }
